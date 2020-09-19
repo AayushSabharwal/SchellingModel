@@ -1,9 +1,13 @@
-import numpy as np
 import random
 from typing import List, Tuple, Dict
 
+import numpy as np
+
 LFloat = List[float]
+LInt = List[int]
+DIntLInt = Dict[int, LInt]
 Colour = Tuple[float, float, float]
+Node = Tuple[int, int]
 LColour = List[Colour]
 
 
@@ -13,20 +17,38 @@ def iter_positions(side: int):
             yield (i, j)
 
 
-def position_to_index(x: int, y: int, side: int):
-    return x * side + y
+def valid_node(node: Node, side: int):
+    return node[0] >= 0 and node[0] < side and node[1] >= 0 and node[1] < side
 
 
-def initialize_grid_graph(type_matrix: np.ndarray, side: int, empty_fraction: float,
-                          types_distribution: LFloat):
-    empty_nodes = random.sample(
-        list(g.keys()), int(side * side * empty_fraction))
+def neighbourhood_value(node: Node, type_matrix: np.ndarray, gets_along_with: DIntLInt,
+                        looking_for: int):
+    side = type_matrix.shape[0]
+    value = 0
+    nneighbours = 0
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            neighbour = tuple(np.add(node, (i, j)))
+            if valid_node(neighbour, side) and (i, j) != (0, 0):
+                nneighbours += 1
+                if (type_matrix[neighbour] in gets_along_with[looking_for]
+                        or type_matrix[neighbour] == -1):
+                    value += 1
+    return value / nneighbours
+
+
+def initialize_grid_graph(type_matrix: np.ndarray, side: int,
+                          empty_fraction: float, types_distribution: LFloat):
+    all_positions = list(iter_positions(side))
+    empty_nodes = random.sample(all_positions,
+                                int(side * side * empty_fraction))
 
     for node in empty_nodes:
         type_matrix[node] = -1
 
+    types = len(types_distribution)
     typeable_nodes = side * side - len(empty_nodes)
-    available_nodes = set(g.keys()).difference(empty_nodes)
+    available_nodes = set(all_positions).difference(empty_nodes)
     for i in range(types - 1):
         type_nodes = random.sample(available_nodes, int(
             typeable_nodes * types_distribution[i]))
