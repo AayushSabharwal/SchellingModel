@@ -6,18 +6,22 @@ import numpy as np
 from matplotlib import pyplot as plt
 import utility_functions as utility
 
-side = 50   # number of side in grid
+side = 50   # size of grid
 empty_fraction = 0.3    # fraction of empty cells
-types_distribution = [0.33, 0.33, 0.34]  # distribution of each type
-type_colours = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]   # colour of each type
+types_distribution = [0.33, 0.33, 0.34]  # distribution of each type, among non-empty cells
+type_colours = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]   # colour of each type of cell
+# adjacency matrix. Denotes how well (or not well) two types get along
+# Values between -1 and 1
+# 0 doesn't affect the neighbourhood_value
+# Ideally, keep the diagonal 1 (everyone gets along with the same type)
 gets_along_with = np.matrix([
     [1, 0, 0],
     [0, 1, 0],
     [0, 0, 1],
 ])
-empty_colour = (0.2, 0.2, 0.2)    # colour of empty nodes
-iterations = 10
-neighbour_amount = 0.75
+empty_colour = (0.2, 0.2, 0.2)    # colour of empty cells
+max_iterations = 10  # maximum iterations the simulation will run for
+neighbour_amount = 0.75  # what threshold of neighbourhood_score is stable?
 
 # value checks
 assert empty_fraction < 1.  # fraction of empty cells should be < 1
@@ -32,16 +36,20 @@ utility.initialize_grid_graph(type_matrix, side, empty_fraction, types_distribut
 # all empty nodes
 empty_nodes = {(x, y) for x, y in utility.iter_positions(side) if type_matrix[(x, y)] == -1}
 
-for _ in range(iterations):
+for _ in range(max_iterations):
     corrected_nodes = 0
     for node in utility.iter_positions(side):
+        # empty nodes aren't shuffled around
         if type_matrix[node] == -1:
             continue
 
-        if utility.neighbourhood_value(node, type_matrix, gets_along_with, type_matrix[node]) < \
+        # if the score of this node is too low (it's unstable)
+        if utility.neighbourhood_score(node, type_matrix, gets_along_with, type_matrix[node]) < \
                 neighbour_amount:
+            # go through all empty nodes
             for empty in empty_nodes:
-                if utility.neighbourhood_value(empty, type_matrix, gets_along_with,
+                # if the score of this node is good enough
+                if utility.neighbourhood_score(empty, type_matrix, gets_along_with,
                                                type_matrix[node]) \
                         >= neighbour_amount:
                     type_matrix[empty] = type_matrix[node]
