@@ -3,7 +3,6 @@ Implementation of Schelling model with a few extra ideas
 """
 
 import numpy as np
-from matplotlib import pyplot as plt
 import utility_functions as utility
 
 side = 50   # size of grid
@@ -24,11 +23,7 @@ max_iterations = 10  # maximum iterations the simulation will run for
 neighbour_amount = 0.75  # what threshold of neighbourhood_score is stable?
 
 # value checks
-assert empty_fraction < 1.  # fraction of empty cells should be < 1
-assert gets_along_with.shape[0] == gets_along_with.shape[1]  # square matrix
-assert len(types_distribution) == len(type_colours) == gets_along_with.shape[0]  # consistency check
-assert all(abs(x) <= 1 for x in np.nditer(gets_along_with))  # all values should be in [-1, 1]
-assert sum(types_distribution) == 1.    # sum of fractions is 1
+utility.check_values_sanity(empty_fraction, gets_along_with, types_distribution, type_colours)
 
 type_matrix = np.zeros((side, side), dtype=int)  # type of (i, j) node
 # initialize the graph. -1 is empty
@@ -63,13 +58,4 @@ for _ in range(max_iterations):
 
 
 # plotting
-colour_map = utility.get_colour_map(side, type_matrix, type_colours, empty_colour)
-position_map = {(x, y): (y, -x) for x, y in utility.iter_positions(side)}
-
-fig, ax = plt.subplots()
-ax.imshow(colour_map)
-ax.set_xticks(np.arange(0, side, 1))
-ax.set_yticks(np.arange(0, side, 1))
-ax.set_xticklabels([])
-ax.set_yticklabels([])
-plt.show()
+utility.show_grid(side, type_matrix, type_colours, empty_colour)
