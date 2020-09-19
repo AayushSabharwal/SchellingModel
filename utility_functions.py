@@ -21,20 +21,18 @@ def valid_node(node: Node, side: int):
     return node[0] >= 0 and node[0] < side and node[1] >= 0 and node[1] < side
 
 
-def neighbourhood_value(node: Node, type_matrix: np.ndarray, gets_along_with: DIntLInt,
-                        looking_for: int):
+def neighbourhood_value(node: Node, type_matrix: np.ndarray, gets_along_with: np.matrix,
+                        looking_for_type: int):
     side = type_matrix.shape[0]
     value = 0
     nneighbours = 0
     for i in range(-1, 2):
         for j in range(-1, 2):
             neighbour = tuple(np.add(node, (i, j)))
-            if valid_node(neighbour, side) and (i, j) != (0, 0):
+            if valid_node(neighbour, side) and (i, j) != (0, 0) and type_matrix[neighbour] != -1:
                 nneighbours += 1
-                if (type_matrix[neighbour] in gets_along_with[looking_for]
-                        or type_matrix[neighbour] == -1):
-                    value += 1
-    return value / nneighbours
+                value += gets_along_with[looking_for_type, type_matrix[neighbour]]
+    return value / nneighbours if nneighbours != 0 else 0
 
 
 def initialize_grid_graph(type_matrix: np.ndarray, side: int,

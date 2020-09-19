@@ -10,23 +10,27 @@ side = 50   # number of side in grid
 empty_fraction = 0.3    # fraction of empty cells
 types_distribution = [0.33, 0.33, 0.34]  # distribution of each type
 type_colours = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]   # colour of each type
-gets_along_with = {0: [0, 1], 1: [1], 2: [2]}
+gets_along_with = np.matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+])
 empty_colour = (0.2, 0.2, 0.2)    # colour of empty nodes
 iterations = 10
-neighbour_fraction = 0.75
+neighbour_amount = 0.75
 
 # value checks
-assert empty_fraction < 1.
-assert len(types_distribution) == len(type_colours)
-assert sum(types_distribution) == 1.
+assert empty_fraction < 1.  # fraction of empty cells should be < 1
+assert gets_along_with.shape[0] == gets_along_with.shape[1]  # square matrix
+assert len(types_distribution) == len(type_colours) == gets_along_with.shape[0]  # consistency check
+assert all(abs(x) <= 1 for x in np.nditer(gets_along_with))  # all values should be in [-1, 1]
+assert sum(types_distribution) == 1.    # sum of fractions is 1
 
-type_matrix = np.zeros((side, side), dtype=int)
+type_matrix = np.zeros((side, side), dtype=int)  # type of (i, j) node
 # initialize the graph. -1 is empty
 utility.initialize_grid_graph(type_matrix, side, empty_fraction, types_distribution)
-
-position_map = {(x, y): (y, -x) for x, y in utility.iter_positions(side)}
-empty_nodes = {(x, y) for x, y in utility.iter_positions(side)
-               if type_matrix[(x, y)] == -1}
+# all empty nodes
+empty_nodes = {(x, y) for x, y in utility.iter_positions(side) if type_matrix[(x, y)] == -1}
 
 for _ in range(iterations):
     corrected_nodes = 0
@@ -35,11 +39,11 @@ for _ in range(iterations):
             continue
 
         if utility.neighbourhood_value(node, type_matrix, gets_along_with, type_matrix[node]) < \
-                neighbour_fraction:
+                neighbour_amount:
             for empty in empty_nodes:
                 if utility.neighbourhood_value(empty, type_matrix, gets_along_with,
                                                type_matrix[node]) \
-                        >= neighbour_fraction:
+                        >= neighbour_amount:
                     type_matrix[empty] = type_matrix[node]
                     type_matrix[node] = -1
                     empty_nodes.remove(empty)
@@ -50,7 +54,9 @@ for _ in range(iterations):
         break
 
 
+# plotting
 colour_map = utility.get_colour_map(side, type_matrix, type_colours, empty_colour)
+position_map = {(x, y): (y, -x) for x, y in utility.iter_positions(side)}
 
 fig, ax = plt.subplots()
 ax.imshow(colour_map)
