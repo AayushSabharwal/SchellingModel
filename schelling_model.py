@@ -12,7 +12,7 @@ types_distribution = [0.33, 0.33, 0.34]  # distribution of each type
 type_colours = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]   # colour of each type
 gets_along_with = {0: [0, 1], 1: [1], 2: [2]}
 empty_colour = (0.2, 0.2, 0.2)    # colour of empty nodes
-iterations = 20
+iterations = 10
 neighbour_fraction = 0.75
 
 # value checks
@@ -54,7 +54,6 @@ colour_map = utility.get_colour_map(side, type_matrix, type_colours, empty_colou
 
 fig, ax = plt.subplots()
 ax.imshow(colour_map)
-ax.grid(which='major', axis='both', linestyle='-', color='k', linewidth=0)
 ax.set_xticks(np.arange(0, side, 1))
 ax.set_yticks(np.arange(0, side, 1))
 ax.set_xticklabels([])
