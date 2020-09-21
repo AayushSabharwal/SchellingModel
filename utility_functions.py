@@ -1,5 +1,5 @@
 import random
-from typing import List, Tuple
+from typing import List, Tuple, Set, Dict
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -9,6 +9,8 @@ Node = Tuple[int, int]
 LFloat = List[float]
 LInt = List[int]
 LColour = List[Colour]
+SNode = Set[Node]
+EMap = Dict[Node, Dict[int, float]]
 
 
 # generator function to iterate through all positions on the grid
@@ -81,6 +83,33 @@ def initialize_grid_graph(type_matrix: np.ndarray, side: int, empty_fraction: fl
     # last type isn't in the for loop so all the rest get assigned
     for node in available_nodes:
         type_matrix[node] = types - 1
+
+
+def initialize_empty(side: int, type_matrix: np.ndarray, gets_along_with: np.matrix, types: int):
+    empty_nodes = {node for node in iter_positions(side) if type_matrix[node] == -1}
+    empty_map = {enode: {i: neighbourhood_score(enode, type_matrix, gets_along_with, i)
+                         for i in range(types)} for enode in empty_nodes}
+
+    return empty_nodes, empty_map
+
+
+def move_node(node: Node, empty: Node, side: int, types: int, type_matrix: np.ndarray,
+              gets_along_with: np.matrix, empty_nodes: SNode, empty_map: EMap):
+    type_matrix[empty] = type_matrix[node]
+    type_matrix[node] = -1
+    empty_nodes.remove(empty)
+    empty_nodes.add(node)
+    empty_map.pop(empty)
+
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            # index of the neighbour
+            neighbour = tuple(np.add(node, (i, j)))
+            # if the node is a valid node, it isn't the central node, and is not empty
+            if valid_node(neighbour, side) and type_matrix[neighbour] == -1:
+                empty_map[neighbour] = {i: neighbourhood_score(neighbour, type_matrix,
+                                                               gets_along_with, i)
+                                        for i in range(types)}
 
 
 # display the grid
