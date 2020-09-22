@@ -11,11 +11,11 @@ type_colours = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]   # colour of each type of cell
 # Ideally, keep the diagonal 1 (everyone gets along with the same type)
 gets_along_with = np.matrix([
     [1, 0.7, 0],
-    [0.7, 1, 0],
-    [0, 0, 1],
+    [0.7, 1, .5],
+    [0, .5, 1],
 ])
 type_matrix = np.zeros((side, side), dtype=int)  # type of (i, j) node
 empty_colour = (0.3, 0.3, 0.3)    # colour of empty cells
 max_iterations = 100  # maximum iterations the simulation will run for
-neighbour_amount = 0.75  # what threshold of neighbourhood_score is stable?
+neighbour_amount = 0.8  # what threshold of neighbourhood_score is stable?
 types = len(types_distribution)

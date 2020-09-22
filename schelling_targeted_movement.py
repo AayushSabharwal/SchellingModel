@@ -2,7 +2,7 @@
 Implementation of Schelling model with a few extra ideas
 """
 
-import utility_functions as utility
+import utility
 from simulation_values import max_iterations, neighbour_amount, type_matrix
 
 # value checks

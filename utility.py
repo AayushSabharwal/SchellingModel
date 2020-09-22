@@ -2,8 +2,10 @@ import random
 from typing import List, Tuple, Set, Dict
 import numpy as np
 from matplotlib import pyplot as plt
-from simulation_values import side, empty_fraction, types_distribution, type_colours, \
+from simulation_parameters import side, empty_fraction, types_distribution, type_colours, \
     gets_along_with, empty_colour, types, type_matrix
+
+
 # type hints
 Colour = Tuple[float, float, float]
 Node = Tuple[int, int]
