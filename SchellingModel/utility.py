@@ -2,8 +2,9 @@ import random
 from typing import List, Tuple, Set, Dict
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.widgets import Slider
 from simulation_parameters import side, empty_fraction, types_distribution, type_colours, \
-    gets_along_with, empty_colour, types, type_matrix
+    gets_along_with, empty_colour, types, type_matrix, grid_history
 
 
 # type hints
@@ -83,6 +84,7 @@ def initialize_grid_graph():
         type_matrix[node] = types - 1
 
 
+# initialize the empty_nodes and empty_map variables
 def initialize_empty():
     empty_nodes = {node for node in iter_positions() if type_matrix[node] == -1}
     empty_map = {enode: {i: neighbourhood_score(enode, i)
@@ -91,6 +93,7 @@ def initialize_empty():
     return empty_nodes, empty_map
 
 
+# move a node to target (empty) node
 def move_node(node: Node, empty: Node, empty_nodes: SNode, empty_map: EMap):
     type_matrix[empty] = type_matrix[node]
     type_matrix[node] = -1
@@ -110,23 +113,34 @@ def move_node(node: Node, empty: Node, empty_nodes: SNode, empty_map: EMap):
 
 # display the grid
 def show_grid():
-    colour_map = get_colour_map()
+    colour_map = get_colour_map(type_matrix)
     fig, ax = plt.subplots()
     ax.imshow(colour_map)
     ax.set_xticks(np.arange(0, side, 1))
     ax.set_yticks(np.arange(0, side, 1))
     ax.set_xticklabels([])
     ax.set_yticklabels([])
+
+    axstage = plt.axes([0.2, 0.05, 0.65, 0.03])
+    sslider = Slider(axstage, 'Stage', 0, len(grid_history) - 1,
+                     valinit=len(grid_history) - 1, valstep=1)
+
+    def update(val):
+        val = int(val)
+        colour_map = get_colour_map(grid_history[val])
+        ax.imshow(colour_map)
+
+    sslider.on_changed(update)
     plt.show()
 
 
 # generates a colour map for plotting
-def get_colour_map():
+def get_colour_map(grid: np.ndarray):
     colour_map = np.ndarray((side, side, 3), dtype=float)
     for i in range(side):
         for j in range(side):
-            if type_matrix[(i, j)] == -1:
+            if grid[(i, j)] == -1:
                 colour_map[(i, j)] = empty_colour
             else:
-                colour_map[(i, j)] = type_colours[type_matrix[(i, j)]]
+                colour_map[(i, j)] = type_colours[grid[(i, j)]]
     return colour_map
