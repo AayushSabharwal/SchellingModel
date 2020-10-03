@@ -1,4 +1,5 @@
 import numpy as np
+import movement_tactics as tactics
 
 
 side = 50   # size of grid
@@ -16,10 +17,11 @@ gets_along_with = np.matrix([
 ])
 type_matrix = np.zeros((side, side), dtype=int)  # type of (i, j) node
 empty_colour = (0.3, 0.3, 0.3)    # colour of empty cells
-max_iterations = 100  # maximum iterations the simulation will run for
+max_iterations = 500  # maximum iterations the simulation will run for
 neighbour_amount = 0.75  # what threshold of neighbourhood_score is stable?
+# what movement tactic is used. For implementation reasons, this must be a type and not an object
+tactic = tactics.TargetedMovement
 types = len(types_distribution)
 
 grid_history = []
 empty_nodes = set()
-tactic = None

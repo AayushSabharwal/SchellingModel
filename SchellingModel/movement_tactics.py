@@ -19,10 +19,18 @@ class MovementTactic(ABC):
     @abstractmethod
     def handle_empty_node(self, node: Node) -> int:
         """
-        Moves the empty nodes
+        Returns the empty node this node will be moved to
 
-        Returns 1 if node is moved, 0 if it isn't
+        The empty node moved to should be removed from params.empty_nodes
         """
+
+    def move_node(self, node: Node, empty: Node):
+        """
+        Moves node to empty
+        """
+        params.type_matrix[empty] = params.type_matrix[node]
+        params.type_matrix[node] = -1
+        params.empty_nodes.add(node)
 
 
 class RandomMovement(MovementTactic):
@@ -33,12 +41,12 @@ class RandomMovement(MovementTactic):
     """
 
     def handle_empty_node(self, node: Node):
-        chosen = random.choice(tuple(params.empty_nodes))
-        params.type_matrix[chosen] = params.type_matrix[node]
-        params.type_matrix[node] = -1
-        params.empty_nodes.remove(chosen)
-        params.empty_nodes.add(node)
-        return 1
+        if len(params.empty_nodes) == 0:
+            return None
+
+        target = random.choice(tuple(params.empty_nodes))
+        params.empty_nodes.remove(target)
+        return target
 
 
 class TargetedMovement(MovementTactic):
@@ -46,26 +54,26 @@ class TargetedMovement(MovementTactic):
         self.empty_map = utility.initialize_empty_map()
 
     def handle_empty_node(self, node: Node):
+        target = None
         for empty in params.empty_nodes:
             # if the score of this (empty) node is good enough
             if self.empty_map[empty][params.type_matrix[node]] >= params.neighbour_amount:
-                self.move_node(node, empty)
-                return 1
-        return 0
+                target = empty
+                break
+        if target is not None:
+            params.empty_nodes.remove(target)
+        return target
 
     # move a node to target (empty) node
     def move_node(self, node: Node, empty: Node):
-        params.type_matrix[empty] = params.type_matrix[node]
-        params.type_matrix[node] = -1
-        params.empty_nodes.remove(empty)
-        params.empty_nodes.add(node)
+        super().move_node(node, empty)  # super allows calling base class method
         self.empty_map.pop(empty)
 
         # after moving, affected neighbour cells of moved cells have to be updated
-        self.update_neighbouts(node)
-        self.update_neighbouts(empty)
+        self.update_neighbours(node)
+        self.update_neighbours(empty)
 
-    def update_neighbouts(self, node: Node):
+    def update_neighbours(self, node: Node):
         for i in range(-1, 2):
             for j in range(-1, 2):
                 # index of the neighbour
