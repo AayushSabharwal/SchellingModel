@@ -30,7 +30,8 @@ grid = CanvasGrid(agent_portrayal, grid_size[0], grid_size[1], 500, 500)
 chart = ChartModule([{"Label": "infected", "Color": "green"},
                      {"Label": "recovered", "Color": "blue"},
                      {"Label": "susceptible", "Color": "red"},
-                     {"Label": "dead", "Color": "grey"}])
+                     {"Label": "dead", "Color": "grey"},
+                     {"Label": "alive", "Color": "black"}])
 
 # just mesa stuff
 server = ModularServer(InfectionModel, [grid, chart], "Infection Model",
