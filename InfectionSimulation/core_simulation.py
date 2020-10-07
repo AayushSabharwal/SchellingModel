@@ -86,6 +86,7 @@ class PersonAgent(Agent):
         self.state = InfectionState.INF if is_infected else InfectionState.SUS
         # how long the infection takes to go away
         self.infection_timeout = params.infection_duration if is_infected else 0
+        self.recovery_timeout = 0
 
     def infect(self):
         """
@@ -103,8 +104,19 @@ class PersonAgent(Agent):
             self.infection_timeout = 0
             if self.random.uniform(0, 1) < params.recovery_chance:  # is this agent recovered...
                 self.state = InfectionState.REC
+                self.recovery_timeout = params.recovered_duration
             else:
                 self.model.dead_agents.append(self)  # ...or dead?
+
+    def recovery_timer(self):
+        """
+        Decrements the recovery timer. Only called if the recovered agents can become susceptible
+        after some time
+        """
+        self.recovery_timeout -= 1
+        if self.recovery_timeout <= 0:
+            self.recovery_timeout = 0
+            self.state = InfectionState.SUS
 
     def spread(self):
         """
@@ -134,3 +146,5 @@ class PersonAgent(Agent):
         if self.state == InfectionState.INF:
             self.spread()
             self.infection_timer()
+        elif params.recovered_duration != -1 and self.state == InfectionState.REC:
+            self.recovery_timer()
