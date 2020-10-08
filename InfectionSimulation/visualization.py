@@ -15,13 +15,13 @@ def agent_portrayal(agent):
                  "r": 0.5}
 
     if agent.state == InfectionState.INF:   # a shade of green for infected
-        portrayal["Color"] = "#00FF00"
+        portrayal["Color"] = "green"
     elif agent.state == InfectionState.SUS:  # red for susceptible
-        portrayal["Color"] = "#FF0000"
+        portrayal["Color"] = "red"
     elif agent.state == InfectionState.REC:  # blue for recovered
-        portrayal["Color"] = "#0000FF"
+        portrayal["Color"] = "blue"
     else:                                   # yellow for vaccinated
-        portrayal["Color"] = "#FFFF00"
+        portrayal["Color"] = "yellow"
     return portrayal
 
 

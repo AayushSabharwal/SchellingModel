@@ -23,7 +23,7 @@ class InfectionModel(Model):
         initial_infected_chance : float
             Initial fraction of people who are infected
         """
-        self.num_agents = 0    # total agents to ever exist
+        self.current_id = 0     # inherited variable, for id generation
         self.statistics = {     # statistics for data collector
             "infected": 0,
             "recovered": 0,
@@ -151,8 +151,7 @@ class InfectionModel(Model):
         initial_state : InfectionState
             Initial state of this agent
         """
-        self.num_agents += 1
-        return PersonAgent(self.num_agents - 1, self, initial_state)  # create agent
+        return PersonAgent(self.next_id(), self, initial_state)  # create agent
 
     def add_agent(self, agent: Agent, pos: GridXY):
         """
@@ -211,7 +210,7 @@ class PersonAgent(Agent):
         or die, based on mortality_rate
         """
         p = self.random.uniform(0, 1)
-        if p < 1. / params.infection_duration:  # if agent recovers
+        if p < params.recovery_probability:  # if agent recovers
             self.model.statistics["total_recoveries"] += 1
             if params.recovered_duration == 0:  # if there is no immunity stage
                 # agents go back to susceptibility
@@ -219,7 +218,7 @@ class PersonAgent(Agent):
             else:   # otherwise, they will go to the recovery state
                 self.target_state = InfectionState.REC
                 self.recovery_timeout = params.recovered_duration
-        elif p < 1. / params.infection_duration + params.mortality_rate:  # if agent dies
+        elif p < params.recovery_probability + params.mortality_rate:  # if agent dies
             self.model.dead_agents.append(self)
 
     def recovery_timer(self):
