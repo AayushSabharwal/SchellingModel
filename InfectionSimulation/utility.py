@@ -9,6 +9,7 @@ class InfectionState(Enum):
     SUS = 1  # susceptible
     INF = 2  # infected
     REC = 3  # recovered (immune)
+    VAC = 4  # vaccinated (also immune)
 
 
 def sqr_euler_distance(a: GridXY, b: GridXY):

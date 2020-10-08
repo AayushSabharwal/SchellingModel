@@ -1,4 +1,3 @@
-import random
 from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
 from core_simulation import InfectionModel
@@ -16,11 +15,13 @@ def agent_portrayal(agent):
                  "r": 0.5}
 
     if agent.state == InfectionState.INF:   # a shade of green for infected
-        portrayal["Color"] = "#%02x%02x%02x" % (0, int(255 * random.uniform(0.5, 1)), 0)
+        portrayal["Color"] = "#00FF00"
     elif agent.state == InfectionState.SUS:  # red for susceptible
-        portrayal["Color"] = "#%02x%02x%02x" % (int(255 * random.uniform(0.5, 1)), 0, 0)
-    else:                                   # blue for recovered
-        portrayal["Color"] = "#%02x%02x%02x" % (0, 0, int(255 * random.uniform(0.5, 1)))
+        portrayal["Color"] = "#FF0000"
+    elif agent.state == InfectionState.REC:  # blue for recovered
+        portrayal["Color"] = "#0000FF"
+    else:                                   # yellow for vaccinated
+        portrayal["Color"] = "#FFFF00"
     return portrayal
 
 
@@ -30,6 +31,7 @@ grid = CanvasGrid(agent_portrayal, grid_size[0], grid_size[1], 500, 500)
 chart = ChartModule([{"Label": "infected", "Color": "green"},
                      {"Label": "recovered", "Color": "blue"},
                      {"Label": "susceptible", "Color": "red"},
+                     {"Label": "vaccinated", "Color": "yellow"},
                      {"Label": "dead", "Color": "grey"},
                      {"Label": "alive", "Color": "black"}])
 

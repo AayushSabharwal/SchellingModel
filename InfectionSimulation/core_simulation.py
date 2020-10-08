@@ -19,6 +19,10 @@ def get_num_susceptible(model):
     return len([a for a in model.schedule.agent_buffer() if a.state == InfectionState.SUS])
 
 
+def get_num_vaccinated(model):
+    return len([a for a in model.schedule.agent_buffer() if a.state == InfectionState.VAC])
+
+
 def get_num_dead(model):
     return model.death_count
 
@@ -33,6 +37,16 @@ class InfectionModel(Model):
     """
 
     def __init__(self, num_agents: int, grid_size: GridXY, initial_infected_chance: float):
+        """
+        Parameters
+        ----------
+        num_agents : int
+            Number of agents initially created in simulation
+        grid_size : GridXY
+            Size of simulation grid
+        initial_infected_chance : float
+            Initial fraction of people who are infected
+        """
         self.num_agents = 0    # total agents to ever exist
         self.grid = MultiGrid(grid_size[0], grid_size[1], True)  # grid that the agent move on
         self.schedule = SimultaneousActivation(self)    # scheduler for iterations of the simulation
@@ -40,20 +54,24 @@ class InfectionModel(Model):
                                            "infected": get_num_infected,
                                            "recovered": get_num_recovered,
                                            "susceptible": get_num_susceptible,
+                                           "vaccinated": get_num_vaccinated,
                                            "dead": get_num_dead,
                                            "alive": get_num_alive
                                            })
         self.running = True                # required for visualization, tells if simulation is done
         self.dead_agents = []   # when agents die, they are added to this list to be removed
-        self.death_count = 0
+        self.death_count = 0    # self explanatory
+        self.step_count = 0     # number of steps completed, required for vaccination
+        self.vaccination_started = False    # has vaccination started?
 
         # creating agents
         for _ in range(num_agents):
-            # is this agent infected at random
-            infected = self.random.uniform(0, 1) < initial_infected_chance
+            # initial state of this agent
+            initial_state = InfectionState.INF if \
+                self.random.uniform(0, 1) < initial_infected_chance else InfectionState.SUS
             # randomise position
             pos = self.random.randrange(self.grid.width), self.random.randrange(self.grid.height)
-            self.add_agent(self.create_agent(infected), pos)
+            self.add_agent(self.create_agent(initial_state), pos)
 
     def check_running(self):
         """
@@ -73,6 +91,12 @@ class InfectionModel(Model):
         self.schedule.step()    # run step for all agents
         self.datacollector.collect(self)    # collect data
 
+        self.step_count += 1
+        # if vaccination is enabled and enough time has passed
+        if not self.vaccination_started and params.vaccination_start != -1 and \
+                self.step_count > params.vaccination_start:
+            self.vaccination_started = True  # start vaccination
+
         for x in self.dead_agents:  # remove dead agents
             self.remove_agent(x)
             self.death_count += 1   # add to death count
@@ -90,7 +114,13 @@ class InfectionModel(Model):
                 continue
 
             if self.random.uniform(0, 1) < params.population_birth_rate:
-                agents_to_add.append((self.create_agent(False), agent.pos))  # add agent to list
+                # the newborn agent is vaccinated if it has started and with given probability,
+                # otherwise it is susceptible
+                initial_state = InfectionState.VAC if self.vaccination_started and \
+                    self.random.uniform(0, 1) < params.newborn_vaccination_rate \
+                    else InfectionState.SUS
+                # add agent to list
+                agents_to_add.append((self.create_agent(initial_state), agent.pos))
 
             if self.random.uniform(0, 1) <\
                     params.population_death_rate:
@@ -100,12 +130,17 @@ class InfectionModel(Model):
         for agent in agents_to_add:
             self.add_agent(agent[0], agent[1])
 
-    def create_agent(self, infected: bool):
+    def create_agent(self, initial_state: InfectionState):
         """
         Creates an agent, and returns it
+
+        Parameters
+        ----------
+        initial_state : InfectionState
+            Initial state of this agent
         """
         self.num_agents += 1
-        return PersonAgent(self.num_agents - 1, self, infected)  # create agent
+        return PersonAgent(self.num_agents - 1, self, initial_state)  # create agent
 
     def add_agent(self, agent: Agent, pos: GridXY):
         """
@@ -128,10 +163,21 @@ class PersonAgent(Agent):
     Agent class
     """
 
-    def __init__(self, u_id: int, model: InfectionModel, is_infected: bool):
+    def __init__(self, u_id: int, model: InfectionModel, initial_state: InfectionState):
+        """
+        Parameters
+        ----------
+        u_id : int
+            Unique id for the agent, required by mesa
+        model : InfectionModel
+            Model that created and handles this agent. Must have grid and scheduler (simultaenous)
+        initial_state : InfectionState
+            Initial state of this agent
+        """
+        # call base __init__
         super().__init__(u_id, model)
         # current state of this agent. Check utility.py for possible states
-        self.state = InfectionState.INF if is_infected else InfectionState.SUS
+        self.state = initial_state
         # how long recovery immunity lasts
         self.recovery_timeout = 0
 
@@ -173,6 +219,14 @@ class PersonAgent(Agent):
             # after recovering, agent is now susceptible again
             self.target_state = InfectionState.SUS
 
+    def try_vaccination(self):
+        """
+        Called on susceptible agents, has a chance for them to get vaccinated
+        """
+        if self.model.vaccination_started and \
+                self.random.uniform(0, 1) < params.general_vaccination_rate:
+            self.target_state = InfectionState.VAC
+
     def spread(self):
         """
         Called on infected agents, to spread infection
@@ -205,6 +259,8 @@ class PersonAgent(Agent):
             self.infection_recovery()           # and has a chance to recover
         elif params.recovered_duration != -1 and self.state == InfectionState.REC:
             self.recovery_timer()
+        elif self.state == InfectionState.SUS:
+            self.try_vaccination()
 
     def advance(self):
         """

@@ -1,13 +1,13 @@
 infection_radius = 3    # how far away from an individual infection can spread
 
-infection_chance = 0.7  # the base probability for infection to spread
+infection_chance = 0.9  # the base probability for infection to spread
 infection_duration = 6  # how long the infection lasts, interpreted as inverse of probability
 # of recovering at any given day
-mortality_rate = 0.8   # probability that an infected agent will die in an iteration
+mortality_rate = 0.2   # probability that an infected agent will die in an iteration
 
-recovered_duration = 0  # how long agents stay recovered. -1 for infinitely
+recovered_duration = 1  # how long agents stay recovered. -1 for infinitely
 
-vaccination_start = 20  # how long it takes for a vaccine to come into effect
+vaccination_start = 20  # how long it takes for a vaccine to come into effect, -1 for no vaccine
 newborn_vaccination_rate = 0.7  # what fraction of newborns are vaccinated each iterations
 general_vaccination_rate = 0.3  # what fractions of the general susceptible populace gets vaccinated
 # each iteration
@@ -26,3 +26,6 @@ assert 0. < infection_chance <= 1.
 assert infection_duration > 0
 assert recovered_duration >= -1
 assert 0 <= population_birth_rate <= 1
+assert vaccination_start >= -1
+assert 0 <= newborn_vaccination_rate <= 1
+assert 0 <= newborn_vaccination_rate <= 1
