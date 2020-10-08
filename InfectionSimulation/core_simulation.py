@@ -143,14 +143,15 @@ class PersonAgent(Agent):
 
     def infection_recovery(self):
         """
-        Randomly has a probability to become recovered each iteration, based on infection_duration
+        Randomly has a probability to become recovered each iteration, based on infection_duration,
+        or die, based on mortality_rate
         """
-        if self.random.uniform(0, 1) < 1. / params.infection_duration:  # if the infection is over
-            if self.random.uniform(0, 1) < params.recovery_rate:  # is this agent recovered...
-                self.state = InfectionState.REC
-                self.recovery_timeout = params.recovered_duration
-            else:
-                self.model.dead_agents.append(self)  # ...or dead?
+        p = self.random.uniform(0, 1)
+        if p < 1. / params.infection_duration:  # if agent recovers
+            self.state = InfectionState.REC
+            self.recovery_timeout = params.recovered_duration
+        elif p < 1. / params.infection_duration + params.mortality_rate:  # if agent dies
+            self.model.dead_agents.append(self)
 
     def recovery_timer(self):
         """
@@ -169,14 +170,13 @@ class PersonAgent(Agent):
         # iterate through all agents in 3 unit radius neighbourhood
         for agent in self.model.grid.iter_cell_list_contents(self.model.grid.get_neighborhood(
                 self.pos, moore=True, include_center=True, radius=params.infection_radius)):
-            # we can't infect those already infected or those recovered (immune)
-            if agent.state == InfectionState.INF or agent.state == InfectionState.REC:
-                continue
-            # the chance for a susceptible individual to get infected is inversely proportional
-            # to the square of the euler distance between the two agents
-            if self.random.uniform(0, 1) < params.infection_chance /\
-                    max(sqr_euler_distance(self.pos, agent.pos), 1):
-                agent.infect()
+            # we can only infect susceptible individuals
+            if agent.state == InfectionState.SUS:
+                # the chance for a susceptible individual to get infected is inversely proportional
+                # to the square of the euler distance between the two agents
+                if self.random.uniform(0, 1) < params.infection_chance /\
+                        max(sqr_euler_distance(self.pos, agent.pos), 1):
+                    agent.infect()
 
     def move(self):
         """
