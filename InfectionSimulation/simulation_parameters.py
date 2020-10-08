@@ -1,7 +1,10 @@
 infection_radius = 3    # how far away from an individual infection can spread
-infection_chance = .7  # the base probability for infection to spread
-infection_duration = 6  # how long the infection lasts
-recovery_chance = 0.8   # the chance with which an individual recovers after infection
+
+infection_chance = 0.7  # the base probability for infection to spread
+infection_duration = 6  # how long the infection lasts, interpreted as inverse of probability
+# of recovering at any given day
+
+recovery_rate = 0.8   # the chance with which an individual recovers after infection
 recovered_duration = 0  # how long agents stay recoevered. -1 for infinitely
 
 population_birth_rate = 0.1  # number of births per iteration as a fraction of currently alive people

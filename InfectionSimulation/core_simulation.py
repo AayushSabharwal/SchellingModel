@@ -132,8 +132,6 @@ class PersonAgent(Agent):
         super().__init__(u_id, model)
         # current state of this agent. Check utility.py for possible states
         self.state = InfectionState.INF if is_infected else InfectionState.SUS
-        # how long the infection takes to go away
-        self.infection_timeout = params.infection_duration if is_infected else 0
         # how long recovery immunity lasts
         self.recovery_timeout = 0
 
@@ -141,17 +139,14 @@ class PersonAgent(Agent):
         """
         Called when an agent is infected by another agent
         """
-        self.infection_timeout = params.infection_duration
         self.state = InfectionState.INF
 
-    def infection_timer(self):
+    def infection_recovery(self):
         """
-        Decrements the infection timer. Once 0, the agent may recover or die (randomly)
+        Randomly has a probability to become recovered each iteration, based on infection_duration
         """
-        self.infection_timeout -= 1
-        if self.infection_timeout <= 0:  # if the infection is over
-            self.infection_timeout = 0
-            if self.random.uniform(0, 1) < params.recovery_chance:  # is this agent recovered...
+        if self.random.uniform(0, 1) < 1. / params.infection_duration:  # if the infection is over
+            if self.random.uniform(0, 1) < params.recovery_rate:  # is this agent recovered...
                 self.state = InfectionState.REC
                 self.recovery_timeout = params.recovered_duration
             else:
@@ -191,9 +186,15 @@ class PersonAgent(Agent):
         self.model.grid.move_agent(self, self.random.choice(neighbours))
 
     def step(self):
+        """
+        Called every agent step
+        """
         self.move()
-        if self.state == InfectionState.INF:
-            self.spread()
-            self.infection_timer()
-        elif params.recovered_duration != -1 and self.state == InfectionState.REC:
+        if self.state == InfectionState.INF:    # every infected agent...
+            self.spread()                       # spreads the infections
+            self.infection_recovery()           # and has a chance to recover
+
+        # for recovered agents. This is not in an elif to also execute on the step where
+        # infection_recovery makes this agent recovered
+        if params.recovered_duration != -1 and self.state == InfectionState.REC:
             self.recovery_timer()
