@@ -28,15 +28,16 @@ def agent_portrayal(agent):
 # visual grid on which agents move
 grid = CanvasGrid(agent_portrayal, grid_size[0], grid_size[1], 500, 500)
 # chart that plots the number of agents in each state with time
-chart = ChartModule([{"Label": "infected", "Color": "green"},
-                     {"Label": "recovered", "Color": "blue"},
-                     {"Label": "susceptible", "Color": "red"},
-                     {"Label": "vaccinated", "Color": "yellow"},
-                     {"Label": "dead", "Color": "grey"},
-                     {"Label": "alive", "Color": "black"}])
-
+chart1 = ChartModule([{"Label": "infected", "Color": "green"},
+                      {"Label": "recovered", "Color": "blue"},
+                      {"Label": "susceptible", "Color": "red"},
+                      {"Label": "vaccinated", "Color": "yellow"},
+                      {"Label": "alive", "Color": "black"}])
+chart2 = ChartModule([{"Label": "total_infections", "Color": "green"},
+                      {"Label": "total_recoveries", "Color": "blue"},
+                      {"Label": "deaths", "Color": "grey"}])
 # just mesa stuff
-server = ModularServer(InfectionModel, [grid, chart], "Infection Model",
+server = ModularServer(InfectionModel, [grid, chart1, chart2], "Infection Model",
                        {
                        "num_agents": num_agents,
                        "grid_size": grid_size,

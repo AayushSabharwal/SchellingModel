@@ -7,30 +7,6 @@ from utility import InfectionState, sqr_euler_distance
 import simulation_parameters as params
 
 
-def get_num_infected(model):
-    return len([a for a in model.schedule.agent_buffer() if a.state == InfectionState.INF])
-
-
-def get_num_recovered(model):
-    return len([a for a in model.schedule.agent_buffer() if a.state == InfectionState.REC])
-
-
-def get_num_susceptible(model):
-    return len([a for a in model.schedule.agent_buffer() if a.state == InfectionState.SUS])
-
-
-def get_num_vaccinated(model):
-    return len([a for a in model.schedule.agent_buffer() if a.state == InfectionState.VAC])
-
-
-def get_num_dead(model):
-    return model.death_count
-
-
-def get_num_alive(model):
-    return len(list(model.schedule.agent_buffer()))
-
-
 class InfectionModel(Model):
     """
     Mesa model class that simulates infection spread
@@ -48,19 +24,32 @@ class InfectionModel(Model):
             Initial fraction of people who are infected
         """
         self.num_agents = 0    # total agents to ever exist
+        self.statistics = {     # statistics for data collector
+            "infected": 0,
+            "recovered": 0,
+            "susceptible": 0,
+            "vaccinated": 0,
+            "deaths": 0,
+            "alive": 0,
+            "total_infections": 0,
+            "total_recoveries": 0,
+        }
+
         self.grid = MultiGrid(grid_size[0], grid_size[1], True)  # grid that the agent move on
         self.schedule = SimultaneousActivation(self)    # scheduler for iterations of the simulation
         self.datacollector = DataCollector(model_reporters={    # to collect data for the graph
-                                           "infected": get_num_infected,
-                                           "recovered": get_num_recovered,
-                                           "susceptible": get_num_susceptible,
-                                           "vaccinated": get_num_vaccinated,
-                                           "dead": get_num_dead,
-                                           "alive": get_num_alive
-                                           })
+            "infected": lambda m: m.statistics["infected"],
+            "recovered": lambda m: m.statistics["recovered"],
+            "susceptible": lambda m: m.statistics["susceptible"],
+            "vaccinated": lambda m: m.statistics["vaccinated"],
+            "deaths": lambda m: m.statistics["deaths"],
+            "alive": lambda m: m.statistics["alive"],
+            "total_infections": lambda m: m.statistics["total_infections"],
+            "total_recoveries": lambda m: m.statistics["total_recoveries"],
+        })
+
         self.running = True                # required for visualization, tells if simulation is done
         self.dead_agents = []   # when agents die, they are added to this list to be removed
-        self.death_count = 0    # self explanatory
         self.step_count = 0     # number of steps completed, required for vaccination
         self.vaccination_started = False    # has vaccination started?
 
@@ -86,8 +75,9 @@ class InfectionModel(Model):
         """
         Called every step
         """
-        # simulate births and deaths
-        self.handle_births_and_deaths()
+
+        self.handle_births_and_deaths()  # simulate births and deaths
+        self.calculate_statistics()  # calculate statistics for data collector
         self.schedule.step()    # run step for all agents
         self.datacollector.collect(self)    # collect data
 
@@ -99,9 +89,31 @@ class InfectionModel(Model):
 
         for x in self.dead_agents:  # remove dead agents
             self.remove_agent(x)
-            self.death_count += 1   # add to death count
+            self.statistics["deaths"] += 1   # add to death count
         self.dead_agents = []
         self.running = self.check_running()  # is the simulation still running?
+
+    def calculate_statistics(self):
+        """
+        Calculates statistics each iteration, for more efficient data collection
+        """
+        # reset all iteration specific parameters
+        self.statistics["infected"] = 0
+        self.statistics["recovered"] = 0
+        self.statistics["susceptible"] = 0
+        self.statistics["vaccinated"] = 0
+        self.statistics["alive"] = 0
+
+        for agent in self.schedule.agent_buffer():
+            self.statistics["alive"] += 1
+            if agent.state == InfectionState.INF:
+                self.statistics["infected"] += 1
+            elif agent.state == InfectionState.SUS:
+                self.statistics["susceptible"] += 1
+            elif agent.state == InfectionState.REC:
+                self.statistics["recovered"] += 1
+            elif agent.state == InfectionState.VAC:
+                self.statistics["vaccinated"] += 1
 
     def handle_births_and_deaths(self):
         """
@@ -191,6 +203,7 @@ class PersonAgent(Agent):
         Called when an agent is infected by another agent
         """
         self.target_state = InfectionState.INF
+        self.model.statistics["total_infections"] += 1
 
     def infection_recovery(self):
         """
@@ -199,6 +212,7 @@ class PersonAgent(Agent):
         """
         p = self.random.uniform(0, 1)
         if p < 1. / params.infection_duration:  # if agent recovers
+            self.model.statistics["total_recoveries"] += 1
             if params.recovered_duration == 0:  # if there is no immunity stage
                 # agents go back to susceptibility
                 self.target_state = InfectionState.SUS
