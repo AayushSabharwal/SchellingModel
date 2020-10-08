@@ -135,11 +135,16 @@ class PersonAgent(Agent):
         # how long recovery immunity lasts
         self.recovery_timeout = 0
 
+        # the state the agent will have at the end of this iteration. This is a requirement for
+        # simultaneous activation, since each agent first calculates its changes and then
+        # applies them
+        self.target_state = None
+
     def infect(self):
         """
         Called when an agent is infected by another agent
         """
-        self.state = InfectionState.INF
+        self.target_state = InfectionState.INF
 
     def infection_recovery(self):
         """
@@ -148,8 +153,12 @@ class PersonAgent(Agent):
         """
         p = self.random.uniform(0, 1)
         if p < 1. / params.infection_duration:  # if agent recovers
-            self.state = InfectionState.REC
-            self.recovery_timeout = params.recovered_duration
+            if params.recovered_duration == 0:  # if there is no immunity stage
+                # agents go back to susceptibility
+                self.target_state = InfectionState.SUS
+            else:   # otherwise, they will go to the recovery state
+                self.target_state = InfectionState.REC
+                self.recovery_timeout = params.recovered_duration
         elif p < 1. / params.infection_duration + params.mortality_rate:  # if agent dies
             self.model.dead_agents.append(self)
 
@@ -161,7 +170,8 @@ class PersonAgent(Agent):
         self.recovery_timeout -= 1
         if self.recovery_timeout <= 0:
             self.recovery_timeout = 0
-            self.state = InfectionState.SUS  # after recovering, agent is now susceptible again
+            # after recovering, agent is now susceptible again
+            self.target_state = InfectionState.SUS
 
     def spread(self):
         """
@@ -187,14 +197,20 @@ class PersonAgent(Agent):
 
     def step(self):
         """
-        Called every agent step
+        Called every agent step, stages changes to be applied
         """
         self.move()
         if self.state == InfectionState.INF:    # every infected agent...
             self.spread()                       # spreads the infections
             self.infection_recovery()           # and has a chance to recover
-
-        # for recovered agents. This is not in an elif to also execute on the step where
-        # infection_recovery makes this agent recovered
-        if params.recovered_duration != -1 and self.state == InfectionState.REC:
+        elif params.recovered_duration != -1 and self.state == InfectionState.REC:
             self.recovery_timer()
+
+    def advance(self):
+        """
+        Applies changes staged in step()
+        """
+        if self.target_state is None:   # return if no changes to be staged
+            return
+        self.state = self.target_state  # apply state change
+        self.target_state = None        # reset

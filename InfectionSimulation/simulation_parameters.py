@@ -7,6 +7,11 @@ mortality_rate = 0.8   # probability that an infected agent will die in an itera
 
 recovered_duration = 0  # how long agents stay recovered. -1 for infinitely
 
+vaccination_start = 20  # how long it takes for a vaccine to come into effect
+newborn_vaccination_rate = 0.7  # what fraction of newborns are vaccinated each iterations
+general_vaccination_rate = 0.3  # what fractions of the general susceptible populace gets vaccinated
+# each iteration
+
 population_birth_rate = 0.1  # number of births per iteration as fraction of currently alive people
 population_death_rate = 0.1  # number of deaths per iteration as fraction of currently alive people
 
