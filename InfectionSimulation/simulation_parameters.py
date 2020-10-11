@@ -2,10 +2,10 @@ infection_radius = 2    # how far away from an individual infection can spread
 
 external_infection_chance = 0.01    # probability that a random susceptible agent will become
 # infected. This models infection coming from outside
-infection_chance = 0.9  # the base probability for infection to spread
-recovery_probability = 1 / 14  # probability that an infected agent recovers at any given day
+infection_chance = 0.5  # the base probability for infection to spread
+recovery_probability = 1 / 7  # probability that an infected agent recovers at any given day
 # this can be interpreted as 1/D, where D is average duration of infection (in days)
-mortality_rate = 0.017   # probability that an infected agent will die in any day
+mortality_rate = 0.00044   # probability that an infected agent will die in any day
 
 recovered_duration = 90  # how long agents stay recovered. -1 for infinitely
 
@@ -17,11 +17,12 @@ general_vaccination_rate = 0.3  # what fractions of the general susceptible popu
 population_birth_rate = 0.0164  # number of births per day as fraction of currently alive people
 population_death_rate = 0.0036  # number of deaths per day as fraction of currently alive people
 
-grid_size = (50, 50)    # size of the GridXY
-num_agents = int(0.0075 * 2500)        # number of agents
-initial_infected_chance = 0.1   # initial fraction of people infected
+grid_size = (1000, 1000)    # size of the GridXY
+num_agents = 7500        # number of agents
+initial_infected_chance = 0.02   # initial fraction of people infected
 
-show_grid = True   # whether to show the grid during visualization
+show_grid = False   # whether to show the grid during dynamic visualization
+data_collection_frequency = 1   # integer, at what interval to collect data
 
 # value sanity checks
 assert num_agents <= grid_size[0] * grid_size[1]

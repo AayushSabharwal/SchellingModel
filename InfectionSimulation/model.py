@@ -80,11 +80,16 @@ class InfectionModel(Model):
         """
         Called every step
         """
-
+        # just to show the progress while running in console
+        if self.step_count % 100 == 0:
+            print(self.step_count)
         self.per_agent_actions()  # simulate actions to be taken globally on all agents
-        self.calculate_statistics()  # calculate statistics for data collector
         self.schedule.step()    # run step for all agents
-        self.datacollector.collect(self)    # collect data
+
+        # collect data at a particular frequency
+        if self.step_count % params.data_collection_frequency == 0:
+            self.calculate_statistics()  # calculate statistics for data collector
+            self.datacollector.collect(self)    # collect data
 
         self.step_count += 1
         # if vaccination is enabled and enough time has passed

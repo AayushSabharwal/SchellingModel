@@ -23,8 +23,6 @@ class PersonAgent(Agent):
         super().__init__(u_id, model)
         # current state of this agent. Check utility.py for possible states
         self.state = initial_state
-        # how long recovery immunity lasts
-        self.recovery_timeout = 0
 
         # the state the agent will have at the end of this iteration. This is a requirement for
         # simultaneous activation, since each agent first calculates its changes and then
@@ -69,7 +67,6 @@ class PersonAgent(Agent):
                 self.target_state = InfectionState.SUS
             else:   # otherwise, they will go to the recovery state
                 self.target_state = InfectionState.REC
-                self.recovery_timeout = params.recovered_duration
         elif p < params.recovery_probability + params.mortality_rate:  # if agent dies
             self.model.dead_agents.append(self)
 
@@ -78,9 +75,8 @@ class PersonAgent(Agent):
         Decrements the recovery timer. Only called if the recovered agents can become susceptible
         after some time
         """
-        self.recovery_timeout -= 1
-        if self.recovery_timeout <= 0:
-            self.recovery_timeout = 0
+        # recovery chance is inversely proportional to average recovered duration
+        if self.random.uniform(0, 1) < 1 / params.recovered_duration:
             # after recovering, agent is now susceptible again
             self.target_state = InfectionState.SUS
 
@@ -125,12 +121,14 @@ class PersonAgent(Agent):
         # simulation steps to be taken only once every day
         if self.model.step_count % 24 == 0:
             if self.state == InfectionState.INF:
-                self.infection_recovery()           # and has a chance to recover
+                self.infection_recovery()           # infected agents have a chance to recover
             elif params.recovered_duration != -1 and self.state == InfectionState.REC:
-                self.recovery_timer()
+                self.recovery_timer()               # recovered agents may get susceptible again
             elif self.state == InfectionState.SUS:
-                self.try_vaccination()
+                self.try_vaccination()              # susceptible agents may get vaccinated
 
+        # once every year
+        if self.model.step_count % 8760 == 0:
             self.simulate_birth()
             self.simulate_death()
 
@@ -144,11 +142,14 @@ class PersonAgent(Agent):
         self.target_state = None        # reset
 
         if self.give_birth:
+            # initial state may be vaccinated, if it is started and with a given probability
             initial_state = InfectionState.VAC if self.model.vaccination_started and \
                 self.random.uniform(0, 1) < params.general_vaccination_rate else InfectionState.SUS
+            # create and add the agent
             self.model.add_agent(self.model.create_agent(initial_state), self.pos)
         if self.die:
-            self.model.remove_agent(self)
+            self.model.dead_agents.append(self)
 
+        # reset
         self.give_birth = False
         self.die = False
