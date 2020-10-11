@@ -1,5 +1,7 @@
 infection_radius = 2    # how far away from an individual infection can spread
 
+external_infection_chance = 0.01    # probability that a random susceptible agent will become
+# infected. This models infection coming from outside
 infection_chance = 0.9  # the base probability for infection to spread
 recovery_probability = 1 / 14  # probability that an infected agent recovers at any given iteration
 # this can be interpreted as 1/D, where D is average duration of infection

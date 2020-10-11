@@ -81,7 +81,7 @@ class InfectionModel(Model):
         Called every step
         """
 
-        self.handle_births_and_deaths()  # simulate births and deaths
+        self.per_agent_actions()  # simulate actions to be taken globally on all agents
         self.calculate_statistics()  # calculate statistics for data collector
         self.schedule.step()    # run step for all agents
         self.datacollector.collect(self)    # collect data
@@ -120,32 +120,14 @@ class InfectionModel(Model):
             elif agent.state == InfectionState.VAC:
                 self.statistics["vaccinated"] += 1
 
-    def handle_births_and_deaths(self):
+    def per_agent_actions(self):
         """
-        Simulates births and deaths in a population
+        Simulates actions to be taken on a global scale per agent
         """
-        agents_to_add = []  # all the agents created
         for agent in self.schedule.agent_buffer():
-            # make sure to not iterate over just created agents
-            if agent in agents_to_add:
-                continue
-
-            if self.random.uniform(0, 1) < params.population_birth_rate:
-                # the newborn agent is vaccinated if it has started and with given probability,
-                # otherwise it is susceptible
-                initial_state = InfectionState.VAC if self.vaccination_started and \
-                    self.random.uniform(0, 1) < params.newborn_vaccination_rate \
-                    else InfectionState.SUS
-                # add agent to list
-                agents_to_add.append((self.create_agent(initial_state), agent.pos))
-
-            if self.random.uniform(0, 1) <\
-                    params.population_death_rate:
-                self.remove_agent(agent)
-
-        # actually add those agents to the simulation
-        for agent in agents_to_add:
-            self.add_agent(agent[0], agent[1])
+            if self.random.uniform(0, 1) < params.external_infection_chance:
+                agent.state = InfectionState.INF
+                self.statistics["total_infections"] += 1
 
     def create_agent(self, initial_state: InfectionState):
         """

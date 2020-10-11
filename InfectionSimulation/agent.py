@@ -1,6 +1,6 @@
-from utility import InfectionState, sqr_euler_distance
 from mesa import Agent, Model
 import simulation_parameters as params
+from utility import InfectionState, euler_distance
 
 
 class PersonAgent(Agent):
@@ -30,6 +30,24 @@ class PersonAgent(Agent):
         # simultaneous activation, since each agent first calculates its changes and then
         # applies them
         self.target_state = None
+        # toggled in self.simulate_birth, and applied in self.advance
+        self.give_birth = False
+        # will this agent die this step?
+        self.die = False
+
+    def simulate_birth(self):
+        """
+        Simulates individuals giving birth. This occurs with probability as specified in params
+        """
+        if self.random.uniform(0, 1) < params.population_birth_rate:
+            self.give_birth = True
+
+    def simulate_death(self):
+        """
+        Simulates death, occurs with probbility as specified in params
+        """
+        if self.random.uniform(0, 1) < params.population_death_rate:
+            self.die = True
 
     def infect(self):
         """
@@ -86,7 +104,7 @@ class PersonAgent(Agent):
                 # the chance for a susceptible individual to get infected is inversely proportional
                 # to the square of the euler distance between the two agents
                 if self.random.uniform(0, 1) < params.infection_chance /\
-                        max(sqr_euler_distance(self.pos, agent.pos), 1):
+                        max(euler_distance(self.pos, agent.pos), 1):
                     agent.infect()
 
     def move(self):
@@ -109,6 +127,9 @@ class PersonAgent(Agent):
         elif self.state == InfectionState.SUS:
             self.try_vaccination()
 
+        self.simulate_birth()
+        self.simulate_death()
+
     def advance(self):
         """
         Applies changes staged in step()
@@ -117,3 +138,13 @@ class PersonAgent(Agent):
             return
         self.state = self.target_state  # apply state change
         self.target_state = None        # reset
+
+        if self.give_birth:
+            initial_state = InfectionState.VAC if self.model.vaccination_started and \
+                self.random.uniform(0, 1) < params.general_vaccination_rate else InfectionState.SUS
+            self.model.add_agent(self.model.create_agent(initial_state), self.pos)
+        if self.die:
+            self.model.remove_agent(self)
+
+        self.give_birth = False
+        self.die = False

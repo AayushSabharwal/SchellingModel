@@ -25,19 +25,20 @@ def agent_portrayal(agent):
     return portrayal
 
 
-# visual grid on which agents move
 # chart that plots the number of agents in each state with time
 chart1 = ChartModule([{"Label": "infected", "Color": "green"},
                       {"Label": "recovered", "Color": "blue"},
                       {"Label": "susceptible", "Color": "red"},
                       {"Label": "vaccinated", "Color": "yellow"},
                       {"Label": "alive", "Color": "black"}])
+# cumulative statistics chart
 chart2 = ChartModule([{"Label": "total_infections", "Color": "green"},
                       {"Label": "total_recoveries", "Color": "blue"},
                       {"Label": "deaths", "Color": "grey"}])
 # just mesa stuff
 visualization_elements = [chart1, chart2]
 if params.show_grid:
+    # visual grid on which agents move
     grid = CanvasGrid(agent_portrayal, params.grid_size[0], params.grid_size[1], 500, 500)
     visualization_elements.insert(0, grid)
 
