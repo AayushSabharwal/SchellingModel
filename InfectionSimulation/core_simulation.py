@@ -58,6 +58,8 @@ class InfectionModel(Model):
             # initial state of this agent
             initial_state = InfectionState.INF if \
                 self.random.uniform(0, 1) < initial_infected_chance else InfectionState.SUS
+            if initial_state == InfectionState.INF:
+                self.statistics["total_infections"] += 1
             # randomise position
             pos = self.random.randrange(self.grid.width), self.random.randrange(self.grid.height)
             self.add_agent(self.create_agent(initial_state), pos)

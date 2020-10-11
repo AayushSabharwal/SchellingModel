@@ -1,7 +1,7 @@
 from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
 from core_simulation import InfectionModel
-from simulation_parameters import grid_size, num_agents
+import simulation_parameters as params
 from utility import InfectionState
 
 
@@ -26,7 +26,6 @@ def agent_portrayal(agent):
 
 
 # visual grid on which agents move
-grid = CanvasGrid(agent_portrayal, grid_size[0], grid_size[1], 500, 500)
 # chart that plots the number of agents in each state with time
 chart1 = ChartModule([{"Label": "infected", "Color": "green"},
                       {"Label": "recovered", "Color": "blue"},
@@ -37,11 +36,16 @@ chart2 = ChartModule([{"Label": "total_infections", "Color": "green"},
                       {"Label": "total_recoveries", "Color": "blue"},
                       {"Label": "deaths", "Color": "grey"}])
 # just mesa stuff
-server = ModularServer(InfectionModel, [grid, chart1, chart2], "Infection Model",
+visualization_elements = [chart1, chart2]
+if params.show_grid:
+    grid = CanvasGrid(agent_portrayal, params.grid_size[0], params.grid_size[1], 500, 500)
+    visualization_elements.insert(0, grid)
+
+server = ModularServer(InfectionModel, visualization_elements, "Infection Model",
                        {
-                       "num_agents": num_agents,
-                       "grid_size": grid_size,
-                       "initial_infected_chance": 0.05
+                           "num_agents": params.num_agents,
+                           "grid_size": params.grid_size,
+                           "initial_infected_chance": params.initial_infected_chance
                        })
 server.port = 8521
 server.launch()
