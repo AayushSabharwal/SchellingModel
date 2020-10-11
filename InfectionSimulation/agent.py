@@ -121,14 +121,18 @@ class PersonAgent(Agent):
         self.move()
         if self.state == InfectionState.INF:    # every infected agent...
             self.spread()                       # spreads the infections
-            self.infection_recovery()           # and has a chance to recover
-        elif params.recovered_duration != -1 and self.state == InfectionState.REC:
-            self.recovery_timer()
-        elif self.state == InfectionState.SUS:
-            self.try_vaccination()
 
-        self.simulate_birth()
-        self.simulate_death()
+        # simulation steps to be taken only once every day
+        if self.model.step_count % 24 == 0:
+            if self.state == InfectionState.INF:
+                self.infection_recovery()           # and has a chance to recover
+            elif params.recovered_duration != -1 and self.state == InfectionState.REC:
+                self.recovery_timer()
+            elif self.state == InfectionState.SUS:
+                self.try_vaccination()
+
+            self.simulate_birth()
+            self.simulate_death()
 
     def advance(self):
         """

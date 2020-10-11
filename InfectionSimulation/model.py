@@ -89,7 +89,7 @@ class InfectionModel(Model):
         self.step_count += 1
         # if vaccination is enabled and enough time has passed
         if not self.vaccination_started and params.vaccination_start != -1 and \
-                self.step_count > params.vaccination_start:
+                self.step_count // 24 > params.vaccination_start:
             self.vaccination_started = True  # start vaccination
 
         for x in self.dead_agents:  # remove dead agents
@@ -124,6 +124,9 @@ class InfectionModel(Model):
         """
         Simulates actions to be taken on a global scale per agent
         """
+        # this should only occur once a day
+        if self.step_count % 24 != 0:
+            return
         for agent in self.schedule.agent_buffer():
             if self.random.uniform(0, 1) < params.external_infection_chance:
                 agent.state = InfectionState.INF
@@ -143,7 +146,7 @@ class InfectionModel(Model):
         PersonAgent
             The agent created
         """
-        return PersonAgent(self.next_id(), self, initial_state)  # create agent
+        return PersonAgent(self.next_id(), self, initial_state)
 
     def add_agent(self, agent: Agent, pos: GridXY):
         """
@@ -157,7 +160,8 @@ class InfectionModel(Model):
         pos : GridXY
             The position where this agent should be on the grid
         """
-        self.schedule.add(agent)    # add to scheduler
+        # add to scheduler
+        self.schedule.add(agent)
         # assign position
         self.grid.place_agent(agent, pos)
 
