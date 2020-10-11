@@ -1,8 +1,7 @@
 from mesa import Agent, Model
-from mesa.space import ContinuousSpace
+from mesa.space import MultiGrid
 from mesa.time import SimultaneousActivation
 from mesa.datacollection import DataCollector
-import noise
 from type_hints import GridXY
 from utility import InfectionState, sqr_euler_distance
 import simulation_parameters as params
@@ -36,7 +35,7 @@ class InfectionModel(Model):
             "total_recoveries": 0,
         }
 
-        self.grid = ContinuousSpace(grid_size[0], grid_size[1], True)  # grid that the agent move on
+        self.grid = MultiGrid(grid_size[0], grid_size[1], True)  # grid that the agent move on
         self.schedule = SimultaneousActivation(self)    # scheduler for iterations of the simulation
         self.datacollector = DataCollector(model_reporters={    # to collect data for the graph
             "infected": lambda m: m.statistics["infected"],
@@ -246,21 +245,22 @@ class PersonAgent(Agent):
         Called on infected agents, to spread infection
         """
         # iterate through all agents in 3 unit radius neighbourhood
-        for agent in self.model.grid.get_neighbors(self.pos, params.infection_radius):
+        for agent in self.model.grid.iter_cell_list_contents(self.model.grid.get_neighborhood(
+                self.pos, moore=True, include_center=True, radius=params.infection_radius)):
             # we can only infect susceptible individuals
             if agent.state == InfectionState.SUS:
                 # the chance for a susceptible individual to get infected is inversely proportional
                 # to the square of the euler distance between the two agents
                 if self.random.uniform(0, 1) < params.infection_chance /\
-                        max(sqr_euler_distance(self.pos, agent.pos)**0.5, 1):
+                        max(sqr_euler_distance(self.pos, agent.pos), 1):
                     agent.infect()
 
     def move(self):
         """
         Moves agent randomly in Von Neumann neighbourhood
         """
-        self.model.grid.move_agent(self, (noise.pnoise2(
-            self.pos[0], self.pos[1]), noise.pnoise2(self.pos[0], self.pos[1])))
+        neighbours = self.model.grid.get_neighborhood(self.pos, moore=False)
+        self.model.grid.move_agent(self, self.random.choice(neighbours))
 
     def step(self):
         """

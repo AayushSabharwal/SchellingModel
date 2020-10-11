@@ -1,23 +1,23 @@
-infection_radius = 2    # how far away from an individual infection can spread
+infection_radius = 4    # how far away from an individual infection can spread
 
-infection_chance = 0.5  # the base probability for infection to spread
-recovery_probability = 1 / 7  # probability that an infected agent recovers at any given iteration
+infection_chance = 0.9  # the base probability for infection to spread
+recovery_probability = 0.3  # probability that an infected agent recovers at any given iteration
 # this can be interpreted as 1/D, where D is average duration of infection
-mortality_rate = 0.017   # probability that an infected agent will die in an iteration
+mortality_rate = 0.3   # probability that an infected agent will die in an iteration
 
-recovered_duration = 21  # how long agents stay recovered. -1 for infinitely
+recovered_duration = 1  # how long agents stay recovered. -1 for infinitely
 
-vaccination_start = -1  # how long it takes for a vaccine to come into effect, -1 for no vaccine
+vaccination_start = 20  # how long it takes for a vaccine to come into effect, -1 for no vaccine
 newborn_vaccination_rate = 0.7  # what fraction of newborns are vaccinated each iterations
 general_vaccination_rate = 0.3  # what fractions of the general susceptible populace gets vaccinated
 # each iteration
 
-population_birth_rate = 0.000056  # number of births per iteration as fraction of currently alive people
-population_death_rate = 0.00002  # number of deaths per iteration as fraction of currently alive people
+population_birth_rate = 0.1  # number of births per iteration as fraction of currently alive people
+population_death_rate = 0.1  # number of deaths per iteration as fraction of currently alive people
 
-grid_size = (500, 500)    # size of the GridXY
+grid_size = (50, 50)    # size of the GridXY
 num_agents = 1000        # number of agents
-initial_infected_chance = 0.01   # initial fraction of people infected
+initial_infected_chance = 0.1   # initial fraction of people infected
 
 
 # value sanity checks
