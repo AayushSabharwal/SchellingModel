@@ -1,6 +1,6 @@
 from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
-from core_simulation import InfectionModel
+from model import InfectionModel
 import simulation_parameters as params
 from utility import InfectionState
 
