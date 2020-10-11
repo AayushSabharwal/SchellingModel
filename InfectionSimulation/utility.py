@@ -15,6 +15,16 @@ class InfectionState(Enum):
 def sqr_euler_distance(a: GridXY, b: GridXY):
     """
     Function to get square of euler distance between two grid points
+
+    Parameters
+    ----------
+    a, b : GridXY
+        points between which sqr euler distance should be calculated
+
+    Returns
+    -------
+    float
+        the euler distance between a and b
     """
     return (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1])
 
@@ -22,5 +32,15 @@ def sqr_euler_distance(a: GridXY, b: GridXY):
 def euler_distance(a: GridXY, b: GridXY):
     """
     Function to get euler distance between two grid points
+
+    Parameters
+    ----------
+    a, b : GridXY
+        points between which euler distance should be calculated
+
+    Returns
+    -------
+    float
+        the euler distance between a and b
     """
     return sqr_euler_distance(a, b) ** 0.5

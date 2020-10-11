@@ -17,7 +17,7 @@ class PersonAgent(Agent):
         model : InfectionModel
             Model that created and handles this agent. Must have grid and scheduler (simultaenous)
         initial_state : InfectionState
-            Initial state of this agent
+            Initial infection state of this agent
         """
         # call base __init__
         super().__init__(u_id, model)

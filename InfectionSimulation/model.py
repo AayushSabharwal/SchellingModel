@@ -129,20 +129,33 @@ class InfectionModel(Model):
                 agent.state = InfectionState.INF
                 self.statistics["total_infections"] += 1
 
-    def create_agent(self, initial_state: InfectionState):
+    def create_agent(self, initial_state: InfectionState) -> PersonAgent:
         """
         Creates an agent, and returns it
 
         Parameters
         ----------
         initial_state : InfectionState
-            Initial state of this agent
+            Initial infection state of this agent
+
+        Returns
+        -------
+        PersonAgent
+            The agent created
         """
         return PersonAgent(self.next_id(), self, initial_state)  # create agent
 
     def add_agent(self, agent: Agent, pos: GridXY):
         """
         Adds an agent to the simulation
+
+        Parameters
+        ----------
+        agent : agent
+            The agent to be added
+
+        pos : GridXY
+            The position where this agent should be on the grid
         """
         self.schedule.add(agent)    # add to scheduler
         # assign position
@@ -151,6 +164,11 @@ class InfectionModel(Model):
     def remove_agent(self, agent: Agent):
         """
         Removes an agent from the simulation
+
+        Parameters
+        ----------
+        agent : Agent
+            The agent to be removed from the simulation
         """
         self.grid.remove_agent(agent)
         self.schedule.remove(agent)
