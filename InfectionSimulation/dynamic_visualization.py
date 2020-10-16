@@ -1,3 +1,6 @@
+"""
+To show a live updating plot of statistics and optionally a grid animation
+"""
 from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
 from model import InfectionModel

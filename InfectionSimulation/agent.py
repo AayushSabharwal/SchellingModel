@@ -1,6 +1,7 @@
+from math import sin, cos, pi
 from mesa import Agent, Model
 import simulation_parameters as params
-from utility import InfectionState, euler_distance
+from utility import InfectionState, toroidal_distance
 
 
 class PersonAgent(Agent):
@@ -23,7 +24,10 @@ class PersonAgent(Agent):
         super().__init__(u_id, model)
         # current state of this agent. Check utility.py for possible states
         self.state = initial_state
-
+        # how long the agent is infected
+        self.infection_duration = 0
+        # how long the agent has been recovered
+        self.recovered_duration = 0
         # the state the agent will have at the end of this iteration. This is a requirement for
         # simultaneous activation, since each agent first calculates its changes and then
         # applies them
@@ -53,30 +57,31 @@ class PersonAgent(Agent):
         """
         self.target_state = InfectionState.INF
         self.model.statistics["total_infections"] += 1
+        self.infection_duration = 0
 
-    def infection_recovery(self):
+    def infection_period(self):
         """
         Randomly has a probability to become recovered each iteration, based on infection_duration,
         or die, based on mortality_rate
         """
-        p = self.random.uniform(0, 1)
-        if p < params.recovery_probability:  # if agent recovers
-            self.model.statistics["total_recoveries"] += 1
-            if params.recovered_duration == 0:  # if there is no immunity stage
-                # agents go back to susceptibility
-                self.target_state = InfectionState.SUS
-            else:   # otherwise, they will go to the recovery state
-                self.target_state = InfectionState.REC
-        elif p < params.recovery_probability + params.mortality_rate:  # if agent dies
-            self.model.dead_agents.append(self)
+        if self.random.uniform(0, 1) < params.infection_end_chance(self.infection_duration):
+            if self.random.uniform(0, 1) < params.mortality_rate:
+                self.model.dead_agents.append(self)
+            else:
+                self.model.statistics["total_recoveries"] += 1
+                if params.has_recovery_immunity:  # if there is no immunity stage
+                    # agents go back to susceptibility
+                    self.target_state = InfectionState.SUS
+                else:   # otherwise, they will go to the recovery state
+                    self.target_state = InfectionState.REC
+                    self.recovered_duration = 0
 
     def recovery_timer(self):
         """
-        Decrements the recovery timer. Only called if the recovered agents can become susceptible
-        after some time
+        Simulates recovery immunity ending
         """
         # recovery chance is inversely proportional to average recovered duration
-        if self.random.uniform(0, 1) < 1 / params.recovered_duration:
+        if self.random.uniform(0, 1) < params.recovered_end_chance(self.recovered_duration):
             # after recovering, agent is now susceptible again
             self.target_state = InfectionState.SUS
 
@@ -96,19 +101,20 @@ class PersonAgent(Agent):
         for agent in self.model.grid.iter_cell_list_contents(self.model.grid.get_neighborhood(
                 self.pos, moore=True, include_center=True, radius=params.infection_radius)):
             # we can only infect susceptible individuals
-            if agent.state == InfectionState.SUS:
-                # the chance for a susceptible individual to get infected is inversely proportional
-                # to the square of the euler distance between the two agents
-                if self.random.uniform(0, 1) < params.infection_chance /\
-                        max(euler_distance(self.pos, agent.pos), 1):
-                    agent.infect()
+            if agent.state == InfectionState.SUS and self.random.uniform(0, 1) < \
+                    params.infection_chance(toroidal_distance(self.pos, agent.pos)):
+                agent.infect()
 
     def move(self):
         """
         Moves agent randomly in Von Neumann neighbourhood
         """
-        neighbours = self.model.grid.get_neighborhood(self.pos, moore=False)
-        self.model.grid.move_agent(self, self.random.choice(neighbours))
+        distance_to_move = params.movement_distance()
+        angle = self.random.uniform(0, 2 * pi)
+        cell = (self.pos[0] + round(distance_to_move * cos(angle)),
+                self.pos[1] + round(distance_to_move * sin(angle)))
+        # neighbours = self.model.grid.get_neighborhood(self.pos, moore=False)
+        self.model.grid.move_agent(self, cell)
 
     def step(self):
         """
@@ -117,14 +123,14 @@ class PersonAgent(Agent):
         self.move()
         if self.state == InfectionState.INF:    # every infected agent...
             self.spread()                       # spreads the infections
+            self.infection_period()           # infection duration ending
+        elif params.has_recovery_immunity and self.state == InfectionState.REC:
+            self.recovery_timer()               # recovered agents may get susceptible again
 
         # simulation steps to be taken only once every day
         if self.model.step_count % 24 == 0:
-            if self.state == InfectionState.INF:
-                self.infection_recovery()           # infected agents have a chance to recover
-            elif params.recovered_duration != -1 and self.state == InfectionState.REC:
-                self.recovery_timer()               # recovered agents may get susceptible again
-            elif self.state == InfectionState.SUS:
+            # if self.state == InfectionState.INF:
+            if self.state == InfectionState.SUS:
                 self.try_vaccination()              # susceptible agents may get vaccinated
 
         # once every year
@@ -136,10 +142,15 @@ class PersonAgent(Agent):
         """
         Applies changes staged in step()
         """
-        if self.target_state is None:   # return if no changes to be staged
-            return
-        self.state = self.target_state  # apply state change
-        self.target_state = None        # reset
+
+        if self.state == InfectionState.INF:
+            self.infection_duration += 1
+        elif self.state == InfectionState.REC:
+            self.recovered_duration += 1
+
+        if self.target_state is not None:   # return if no changes to be staged
+            self.state = self.target_state  # apply state change
+            self.target_state = None        # reset
 
         if self.give_birth:
             # initial state may be vaccinated, if it is started and with a given probability

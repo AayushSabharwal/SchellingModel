@@ -1,5 +1,6 @@
 from enum import Enum
 from type_hints import GridXY
+import simulation_parameters as params
 
 
 class InfectionState(Enum):
@@ -12,35 +13,42 @@ class InfectionState(Enum):
     VAC = 4  # vaccinated (also immune)
 
 
-def sqr_euler_distance(a: GridXY, b: GridXY):
+def sqr_toroidal_distance(a: GridXY, b: GridXY):
     """
-    Function to get square of euler distance between two grid points
+    Function to get square of toroidal distance between two grid points
 
     Parameters
     ----------
     a, b : GridXY
-        points between which sqr euler distance should be calculated
+        points between which sqr toroidal distance should be calculated
 
     Returns
     -------
     float
-        the euler distance between a and b
+        the toroidal distance between a and b
     """
-    return (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1])
+    xdelta = abs(a[0] - b[0])
+    if xdelta > params.grid_size[0] / 2:
+        xdelta = params.grid_size[0] / 2 - xdelta
+
+    ydelta = abs(a[1] - b[1])
+    if ydelta > params.grid_size[1] / 2:
+        ydelta = params.grid_size[1] / 2 - ydelta
+    return xdelta**2 + ydelta**2
 
 
-def euler_distance(a: GridXY, b: GridXY):
+def toroidal_distance(a: GridXY, b: GridXY):
     """
-    Function to get euler distance between two grid points
+    Function to get toroidal distance between two grid points
 
     Parameters
     ----------
     a, b : GridXY
-        points between which euler distance should be calculated
+        points between which toroidal distance should be calculated
 
     Returns
     -------
     float
-        the euler distance between a and b
+        the toroidal distance between a and b
     """
-    return sqr_euler_distance(a, b) ** 0.5
+    return sqr_toroidal_distance(a, b) ** 0.5
