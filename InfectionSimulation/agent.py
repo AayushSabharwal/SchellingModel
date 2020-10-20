@@ -41,14 +41,16 @@ class PersonAgent(Agent):
         """
         Simulates individuals giving birth. This occurs with probability as specified in params
         """
-        if self.random.uniform(0, 1) < params.params['population_birth_rate']:
+        # divided by 8760 to convert yearly fraction to hourly
+        if self.random.uniform(0, 1) < params.params['population_birth_rate'] / 8760:
             self.give_birth = True
 
     def simulate_death(self):
         """
         Simulates death, occurs with probbility as specified in params
         """
-        if self.random.uniform(0, 1) < params.params['population_death_rate']:
+        # divided by 8760 to convert yearly fraction to hourly
+        if self.random.uniform(0, 1) < params.params['population_death_rate'] / 8760:
             self.die = True
 
     def infect(self):
@@ -127,17 +129,11 @@ class PersonAgent(Agent):
             self.infection_period()           # infection duration ending
         elif params.params['has_recovery_immunity'] and self.state == InfectionState.REC:
             self.recovery_timer()               # recovered agents may get susceptible again
+        elif self.state == InfectionState.SUS:
+            self.try_vaccination()              # susceptible agents may get vaccinated
 
-        # simulation steps to be taken only once every day
-        if self.model.step_count % 24 == 0:
-            # if self.state == InfectionState.INF:
-            if self.state == InfectionState.SUS:
-                self.try_vaccination()              # susceptible agents may get vaccinated
-
-        # once every year
-        if self.model.step_count % 8760 == 0:
-            self.simulate_birth()
-            self.simulate_death()
+        self.simulate_birth()
+        self.simulate_death()
 
     def advance(self):
         """

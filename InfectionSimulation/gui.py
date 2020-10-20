@@ -102,8 +102,8 @@ class InfectionApp(tk.Frame):
                     params.params[name] = type(params.params[name])(self.entries[name].get())
                 except ValueError:
                     continue
-        params.params["show_grid"] = self.show_grid.get()
-        params.params["has_recovery_immunity"] = self.has_recovery_immunity.get()
+        params.params["show_grid"] = bool(self.show_grid.get())
+        params.params["has_recovery_immunity"] = bool(self.has_recovery_immunity.get())
 
     def stop_current_simulation(self):
         if self.active_process is not None:
@@ -118,6 +118,12 @@ class InfectionApp(tk.Frame):
         self.active_process.start()
 
 
+def on_quit():
+    app.stop_current_simulation()
+    root.destroy()
+
+
 root = tk.Tk()
 app = InfectionApp(root)
+root.protocol('WM_DELETE_WINDOW', on_quit)
 app.mainloop()

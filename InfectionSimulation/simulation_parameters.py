@@ -7,26 +7,27 @@ params = {
     'external_infection_chance': 0.01,    # probability that a random susceptible agent will become
     # infected. This models infection coming from outside
     # recovery probability is modeled as an erlang distribution
-    'infection_duration_shape': 33,
-    'infection_duration_scale': 18.75,
+    'infection_duration_shape': 33.,
+    'infection_duration_scale': 18.75,  # this should be scaled in terms of hours, so multiply by 24
     'mortality_rate': 0.014,  # fraction of agents that contract the disease that die
 
     # does this disease give immunity on recovery
     'has_recovery_immunity': True,
     # recovery immunity duration is modeled as an erlang distribution
-    'recovered_duration_shape': 90,
-    'recovered_duration_scale': 80 / 3,
+    'recovered_duration_shape': 90.,
+    'recovered_duration_scale': 80 / 3,  # should be scaled in terms of hours, so multiply by 24
 
     'vaccination_start': -1,  # how long (days) it takes for a vaccine, -1 for no vaccine
-    'newborn_vaccination_rate': 0.7,  # what fraction of newborns are vaccinated each iterations
-    'general_vaccination_rate': 0.3,  # what fractions of the general susceptible populace gets vaccinated
+    'newborn_vaccination_rate': 0.03,  # what fraction of newborns are vaccinated each iterations
+    'general_vaccination_rate': 0.0125,  # what fractions of the general susceptible populace gets vaccinated
     # each iteration
 
-    'mean_distance_per_hour': 4,  # average distance moved by an agent in an hour
-    'sd_distance_per_hour': 1,    # standard deviation in distance moved per hour
+    # distance moved is modeled as a normal distribution
+    'mean_distance_per_hour': 4.,  # average distance moved by an agent in an hour
+    'sd_distance_per_hour': 1.,    # standard deviation in distance moved per hour
 
-    'population_birth_rate': 0.0164,  # number of births per day as fraction of currently alive people
-    'population_death_rate': 0.0036,  # number of deaths per day as fraction of currently alive people
+    'population_birth_rate': 0.0164,  # number of births per year as fraction of currently alive people
+    'population_death_rate': 0.0036,  # number of deaths per year as fraction of currently alive people
 
     'grid_width': 50,    # size of the GridXY
     'grid_height': 50,
@@ -108,7 +109,7 @@ def recovered_end_chance(i: int):
 # value sanity checks
 def sanity_check():
     # type checking
-    assert isinstance(params['infection_radius'], float)
+    assert isinstance(params['infection_radius'], int)
     assert isinstance(params['external_infection_chance'], float)
     assert isinstance(params['infection_duration_shape'], float)
     assert isinstance(params['infection_duration_scale'], float)

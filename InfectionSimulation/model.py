@@ -94,7 +94,7 @@ class InfectionModel(Model):
         self.step_count += 1
         # if vaccination is enabled and enough time has passed
         if not self.vaccination_started and params.params['vaccination_start'] != -1 and \
-                self.step_count // 24 > params.params['vaccination_start']:
+                self.step_count > params.params['vaccination_start']:
             self.vaccination_started = True  # start vaccination
 
         for x in self.dead_agents:  # remove dead agents
