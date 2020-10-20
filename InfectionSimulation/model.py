@@ -87,14 +87,14 @@ class InfectionModel(Model):
         self.schedule.step()    # run step for all agents
 
         # collect data at a particular frequency
-        if self.step_count % params.data_collection_frequency == 0:
+        if self.step_count % params.params['data_collection_frequency'] == 0:
             self.calculate_statistics()  # calculate statistics for data collector
             self.datacollector.collect(self)    # collect data
 
         self.step_count += 1
         # if vaccination is enabled and enough time has passed
-        if not self.vaccination_started and params.vaccination_start != -1 and \
-                self.step_count // 24 > params.vaccination_start:
+        if not self.vaccination_started and params.params['vaccination_start'] != -1 and \
+                self.step_count // 24 > params.params['vaccination_start']:
             self.vaccination_started = True  # start vaccination
 
         for x in self.dead_agents:  # remove dead agents
@@ -133,7 +133,7 @@ class InfectionModel(Model):
         if self.step_count % 24 != 0:
             return
         for agent in self.schedule.agent_buffer():
-            if self.random.uniform(0, 1) < params.external_infection_chance:
+            if self.random.uniform(0, 1) < params.params['external_infection_chance']:
                 agent.state = InfectionState.INF
                 self.statistics["total_infections"] += 1
 

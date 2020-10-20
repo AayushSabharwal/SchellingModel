@@ -1,0 +1,6 @@
+Just a list of sources for covid related statistics used in simulation_parameters
+
+Recovery time = https://www.sciencedirect.com/science/article/pii/S1871402120302502?dgcid=rss_sd_all
+Diagnosis to death = https://theprint.in/health/15-days-between-diagnosis-and-death-for-covid-patients-in-india-fatality-data-shows/473935/
+Distance to infection chance = https://www.sciencefocus.com/news/coronavirus-reducing-distance-to-one-metre-increases-transmission-risk/
+Erlang model for I-R transition = https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SIR_model

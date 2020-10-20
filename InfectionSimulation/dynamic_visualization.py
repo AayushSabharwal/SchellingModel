@@ -40,16 +40,21 @@ chart2 = ChartModule([{"Label": "total_infections", "Color": "green"},
                       {"Label": "deaths", "Color": "grey"}])
 # just mesa stuff
 visualization_elements = [chart1, chart2]
-if params.show_grid:
-    # visual grid on which agents move
-    grid = CanvasGrid(agent_portrayal, params.grid_size[0], params.grid_size[1], 500, 500)
-    visualization_elements.insert(0, grid)
 
-server = ModularServer(InfectionModel, visualization_elements, "Infection Model",
-                       {
-                           "num_agents": params.num_agents,
-                           "grid_size": params.grid_size,
-                           "initial_infected_chance": params.initial_infected_chance
-                       })
-server.port = 8521
-server.launch()
+
+def dynamic_run():
+    if params.params['show_grid']:
+        # visual grid on which agents move
+        grid = CanvasGrid(agent_portrayal, params.params['grid_width'], params.params['grid_width'],
+                          500, 500)
+        visualization_elements.insert(0, grid)
+
+    server = ModularServer(InfectionModel, visualization_elements, "Infection Model",
+                           {
+                               "num_agents": params.params['num_agents'],
+                               "grid_size": (params.params['grid_width'],
+                                             params.params['grid_height']),
+                               "initial_infected_chance": params.params['initial_infected_chance']
+                           })
+    server.port = 8521
+    server.launch()

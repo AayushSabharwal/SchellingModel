@@ -41,14 +41,14 @@ class PersonAgent(Agent):
         """
         Simulates individuals giving birth. This occurs with probability as specified in params
         """
-        if self.random.uniform(0, 1) < params.population_birth_rate:
+        if self.random.uniform(0, 1) < params.params['population_birth_rate']:
             self.give_birth = True
 
     def simulate_death(self):
         """
         Simulates death, occurs with probbility as specified in params
         """
-        if self.random.uniform(0, 1) < params.population_death_rate:
+        if self.random.uniform(0, 1) < params.params['population_death_rate']:
             self.die = True
 
     def infect(self):
@@ -65,11 +65,11 @@ class PersonAgent(Agent):
         or die, based on mortality_rate
         """
         if self.random.uniform(0, 1) < params.infection_end_chance(self.infection_duration):
-            if self.random.uniform(0, 1) < params.mortality_rate:
+            if self.random.uniform(0, 1) < params.params['mortality_rate']:
                 self.model.dead_agents.append(self)
             else:
                 self.model.statistics["total_recoveries"] += 1
-                if params.has_recovery_immunity:  # if there is no immunity stage
+                if params.params['has_recovery_immunity']:  # if there is no immunity stage
                     # agents go back to susceptibility
                     self.target_state = InfectionState.SUS
                 else:   # otherwise, they will go to the recovery state
@@ -90,7 +90,7 @@ class PersonAgent(Agent):
         Called on susceptible agents, has a chance for them to get vaccinated
         """
         if self.model.vaccination_started and \
-                self.random.uniform(0, 1) < params.general_vaccination_rate:
+                self.random.uniform(0, 1) < params.params['general_vaccination_rate']:
             self.target_state = InfectionState.VAC
 
     def spread(self):
@@ -99,7 +99,8 @@ class PersonAgent(Agent):
         """
         # iterate through all agents in 3 unit radius neighbourhood
         for agent in self.model.grid.iter_cell_list_contents(self.model.grid.get_neighborhood(
-                self.pos, moore=True, include_center=True, radius=params.infection_radius)):
+                self.pos, moore=True, include_center=True,
+                radius=params.params['infection_radius'])):
             # we can only infect susceptible individuals
             if agent.state == InfectionState.SUS and self.random.uniform(0, 1) < \
                     params.infection_chance(toroidal_distance(self.pos, agent.pos)):
@@ -124,7 +125,7 @@ class PersonAgent(Agent):
         if self.state == InfectionState.INF:    # every infected agent...
             self.spread()                       # spreads the infections
             self.infection_period()           # infection duration ending
-        elif params.has_recovery_immunity and self.state == InfectionState.REC:
+        elif params.params['has_recovery_immunity'] and self.state == InfectionState.REC:
             self.recovery_timer()               # recovered agents may get susceptible again
 
         # simulation steps to be taken only once every day
@@ -155,7 +156,8 @@ class PersonAgent(Agent):
         if self.give_birth:
             # initial state may be vaccinated, if it is started and with a given probability
             initial_state = InfectionState.VAC if self.model.vaccination_started and \
-                self.random.uniform(0, 1) < params.general_vaccination_rate else InfectionState.SUS
+                self.random.uniform(0, 1) < params.params['general_vaccination_rate'] \
+                else InfectionState.SUS
             # create and add the agent
             self.model.add_agent(self.model.create_agent(initial_state), self.pos)
         if self.die:

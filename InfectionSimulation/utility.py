@@ -28,12 +28,12 @@ def sqr_toroidal_distance(a: GridXY, b: GridXY):
         the toroidal distance between a and b
     """
     xdelta = abs(a[0] - b[0])
-    if xdelta > params.grid_size[0] / 2:
-        xdelta = params.grid_size[0] / 2 - xdelta
+    if xdelta > params.params['grid_width'] / 2:
+        xdelta = params.params['grid_width'] / 2 - xdelta
 
     ydelta = abs(a[1] - b[1])
-    if ydelta > params.grid_size[1] / 2:
-        ydelta = params.grid_size[1] / 2 - ydelta
+    if ydelta > params.params['grid_height'] / 2:
+        ydelta = params.params['grid_height'] / 2 - ydelta
     return xdelta**2 + ydelta**2
 
 
