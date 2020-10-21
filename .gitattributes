@@ -1,0 +1,2 @@
+InfectionSimulation/releases/* filter=lfs diff=lfs merge=lfs -text
+InfectionSimulation/releases/*.tar.gz filter=lfs diff=lfs merge=lfs -text
