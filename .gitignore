@@ -1,4 +1,5 @@
 get-pip.py
+build/
 __pycache__/
 screenshots/
 SchellingModel/Analysis/

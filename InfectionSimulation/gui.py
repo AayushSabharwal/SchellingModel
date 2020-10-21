@@ -1,11 +1,14 @@
 import tkinter as tk
 from tkinter import messagebox
-from multiprocessing import Process
+from multiprocessing import Process, freeze_support
 from static_visualization import static_run
 from dynamic_visualization import dynamic_run
 import simulation_parameters as params
 from documentation import documentation as docs
+import sys, asyncio
 
+if sys.version_info[0]==3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 class InfectionApp(tk.Frame):
     def __init__(self, master=None):
@@ -117,8 +120,9 @@ def on_quit():
     app.stop_current_simulation()
     root.destroy()
 
-
-root = tk.Tk()
-app = InfectionApp(root)
-root.protocol('WM_DELETE_WINDOW', on_quit)
-app.mainloop()
+if __name__ == '__main__':
+    freeze_support()
+    root = tk.Tk()
+    app = InfectionApp(root)
+    root.protocol('WM_DELETE_WINDOW', on_quit)
+    app.mainloop()
