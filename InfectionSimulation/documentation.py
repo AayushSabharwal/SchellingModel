@@ -4,6 +4,15 @@ documentation = {
     Must be an integer
     ''',
 
+    'infection_chance_function': '''
+    Function that defines the probability of infection as distance from infected agent increases (within Infection Radius)
+    This should be Python 3 code
+    Assume the distance is available as 'dist'
+    Assume the following imports:
+    import numpy as np
+    import math
+    ''',
+
     'external_infection_chance': '''
     Probability that a random susceptible agent will become infected in any iteration (hour).
     This models infection coming in from outside.

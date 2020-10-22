@@ -3,7 +3,7 @@ import numpy as np
 
 params = {
     'infection_radius': 2,    # how far away from an individual infection can spread
-
+    'infection_chance_function': 'np.random.normal([0.13, 0.06, 0.03][min(round(dist), 2)], 0.1 * [0.13, 0.06, 0.03][min(round(dist), 2)])',
     'external_infection_chance': 0.01,    # probability that a random susceptible agent will become
     # infected. This models infection coming from outside
     # recovery probability is modeled as an erlang distribution
@@ -54,9 +54,8 @@ def infection_chance(dist: float):
     float
         Probability that infection will occur
     """
-    distr = [0.13, 0.06, 0.03]
-    mean = distr[min(round(dist), len(distr) - 1)]
-    return np.random.normal(mean, mean / 10)
+
+    return params['infection_chance_function'](dist)
 
 
 def movement_distance():
