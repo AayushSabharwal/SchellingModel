@@ -8,6 +8,7 @@ documentation = {
     Function that defines the probability of infection as distance from infected agent increases (within Infection Radius)
     This should be Python 3 code
     Assume the distance is available as 'dist'
+    The given expression should evaluate to a float in the range [0, 1]
     Assume the following imports:
     import numpy as np
     import math
