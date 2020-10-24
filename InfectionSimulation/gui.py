@@ -5,8 +5,8 @@ from tkinter import messagebox
 from tkinter import ttk
 from multiprocessing import Process, Manager, freeze_support
 try:
-    from static_visualization import static_run
-    from dynamic_visualization import dynamic_run
+    from static_run import static_run
+    from dynamic_run import dynamic_run
     from documentation import documentation as docs
     from simulation_parameters import DEFAULT_PARAMS, sanity_check
 except ImportError:

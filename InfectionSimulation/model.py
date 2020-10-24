@@ -90,7 +90,7 @@ class InfectionModel(Model):
         # collect data at a particular frequency
         if self.step_count % self.params['data_collection_frequency'] == 0:
             self.calculate_statistics()  # calculate statistics for data collector
-            self.datacollector.collect(self)    # collect data
+            self.dataCollector.collect(self)    # collect data
 
         self.step_count += 1
         # if vaccination is enabled and enough time has passed

@@ -37,11 +37,11 @@ chart1 = ChartModule([{"Label": "infected", "Color": "green"},
                       {"Label": "recovered", "Color": "blue"},
                       {"Label": "susceptible", "Color": "red"},
                       {"Label": "vaccinated", "Color": "yellow"},
-                      {"Label": "alive", "Color": "black"}])
+                      {"Label": "alive", "Color": "black"}], data_collector_name='dataCollector')
 # cumulative statistics chart
 chart2 = ChartModule([{"Label": "total_infections", "Color": "green"},
                       {"Label": "total_recoveries", "Color": "blue"},
-                      {"Label": "deaths", "Color": "grey"}])
+                      {"Label": "deaths", "Color": "grey"}], data_collector_name='dataCollector')
 # just mesa stuff
 visualization_elements = [chart1, chart2]
 
