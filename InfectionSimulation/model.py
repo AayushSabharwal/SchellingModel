@@ -21,12 +21,6 @@ class InfectionModel(Model):
         """
         Parameters
         ----------
-        num_agents : int
-            Number of agents initially created in simulation
-        grid_size : Tuple[int, int]
-            Size of simulation grid
-        initial_infected_chance : float
-            Initial fraction of people who are infected
         params: dict
             Simulation parameters
         """
@@ -45,7 +39,7 @@ class InfectionModel(Model):
 
         self.grid = MultiGrid(self.params['grid_width'], self.params['grid_height'], True)  # grid that agents move on
         self.schedule = SimultaneousActivation(self)    # scheduler for iterations of the simulation
-        self.datacollector = DataCollector(model_reporters={    # to collect data for the graph
+        self.dataCollector = DataCollector(model_reporters={    # to collect data for the graph
             "infected": lambda m: m.statistics["infected"],
             "recovered": lambda m: m.statistics["recovered"],
             "susceptible": lambda m: m.statistics["susceptible"],

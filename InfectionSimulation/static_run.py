@@ -10,4 +10,4 @@ def static_run(params: dict):
         model.step()
         if not model.running:
             break
-    model.datacollector.get_model_vars_dataframe().to_csv('run_data.csv', index=False)
+    model.dataCollector.get_model_vars_dataframe().to_csv('run_data.csv', index=False)
