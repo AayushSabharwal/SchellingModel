@@ -3,9 +3,13 @@ To show a live updating plot of statistics and optionally a grid animation
 """
 from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
-from model import InfectionModel
-import simulation_parameters as params
-from utility import InfectionState
+try:
+    from model import InfectionModel
+    import simulation_parameters as params
+    from utility import InfectionState
+except ImportError:
+    from InfectionSimulation.model import InfectionModel
+    from InfectionSimulation.utility import InfectionState
 
 
 def agent_portrayal(agent):
@@ -42,19 +46,13 @@ chart2 = ChartModule([{"Label": "total_infections", "Color": "green"},
 visualization_elements = [chart1, chart2]
 
 
-def dynamic_run():
-    if params.params['show_grid']:
+def dynamic_run(params: dict):
+    if params['show_grid']:
         # visual grid on which agents move
-        grid = CanvasGrid(agent_portrayal, params.params['grid_width'], params.params['grid_width'],
+        grid = CanvasGrid(agent_portrayal, params['grid_width'], params['grid_height'],
                           500, 500)
         visualization_elements.insert(0, grid)
 
-    server = ModularServer(InfectionModel, visualization_elements, "Infection Model",
-                           {
-                               "num_agents": params.params['num_agents'],
-                               "grid_size": (params.params['grid_width'],
-                                             params.params['grid_height']),
-                               "initial_infected_chance": params.params['initial_infected_chance']
-                           })
+    server = ModularServer(InfectionModel, visualization_elements, "Infection Model", {"params": params})
     server.port = 8521
     server.launch()

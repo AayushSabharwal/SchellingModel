@@ -1,13 +1,14 @@
+from __future__ import annotations
+
 from math import sin, cos, pi
-from mesa import Agent, Model
-try:
-    import simulation_parameters as params
-except ImportError:
-    from . import simulation_parameters as params
+from mesa import Agent
+
 try:
     from utility import InfectionState, toroidal_distance
+    import simulation_parameters as params
 except ImportError:
-    from .utility import InfectionState, toroidal_distance
+    from InfectionSimulation import simulation_parameters as params
+    from InfectionSimulation.utility import InfectionState, toroidal_distance
 
 
 class PersonAgent(Agent):
@@ -15,14 +16,14 @@ class PersonAgent(Agent):
     Agent class
     """
 
-    def __init__(self, u_id: int, model: Model, initial_state: InfectionState):
+    def __init__(self, u_id: int, model, initial_state: InfectionState):
         """
         Parameters
         ----------
         u_id : int
             Unique id for the agent, required by mesa
         model : InfectionModel
-            Model that created and handles this agent. Must have grid and scheduler (simultaenous)
+            Model that created and handles this agent. Must have grid and scheduler (simultaneous)
         initial_state : InfectionState
             Initial infection state of this agent
         """
@@ -48,15 +49,15 @@ class PersonAgent(Agent):
         Simulates individuals giving birth. This occurs with probability as specified in params
         """
         # divided by 8760 to convert yearly fraction to hourly
-        if self.random.uniform(0, 1) < params.params['population_birth_rate'] / 8760:
+        if self.random.uniform(0, 1) < self.model.params['population_birth_rate'] / 8760:
             self.give_birth = True
 
     def simulate_death(self):
         """
-        Simulates death, occurs with probbility as specified in params
+        Simulates death, occurs with probability as specified in params
         """
         # divided by 8760 to convert yearly fraction to hourly
-        if self.random.uniform(0, 1) < params.params['population_death_rate'] / 8760:
+        if self.random.uniform(0, 1) < self.model.params['population_death_rate'] / 8760:
             self.die = True
 
     def infect(self):
@@ -72,12 +73,12 @@ class PersonAgent(Agent):
         Randomly has a probability to become recovered each iteration, based on infection_duration,
         or die, based on mortality_rate
         """
-        if self.random.uniform(0, 1) < params.infection_end_chance(self.infection_duration):
-            if self.random.uniform(0, 1) < params.params['mortality_rate']:
+        if self.random.uniform(0, 1) < params.infection_end_chance(self.model.params, self.infection_duration):
+            if self.random.uniform(0, 1) < self.model.params['mortality_rate']:
                 self.model.dead_agents.append(self)
             else:
                 self.model.statistics["total_recoveries"] += 1
-                if params.params['has_recovery_immunity']:  # if there is no immunity stage
+                if self.model.params['has_recovery_immunity']:  # if there is no immunity stage
                     # agents go back to susceptibility
                     self.target_state = InfectionState.SUS
                 else:   # otherwise, they will go to the recovery state
@@ -89,7 +90,7 @@ class PersonAgent(Agent):
         Simulates recovery immunity ending
         """
         # recovery chance is inversely proportional to average recovered duration
-        if self.random.uniform(0, 1) < params.recovered_end_chance(self.recovered_duration):
+        if self.random.uniform(0, 1) < params.recovered_end_chance(self.model.params, self.recovered_duration):
             # after recovering, agent is now susceptible again
             self.target_state = InfectionState.SUS
 
@@ -98,7 +99,7 @@ class PersonAgent(Agent):
         Called on susceptible agents, has a chance for them to get vaccinated
         """
         if self.model.vaccination_started and \
-                self.random.uniform(0, 1) < params.params['general_vaccination_rate']:
+                self.random.uniform(0, 1) < self.model.params['general_vaccination_rate']:
             self.target_state = InfectionState.VAC
 
     def spread(self):
@@ -108,17 +109,19 @@ class PersonAgent(Agent):
         # iterate through all agents in 3 unit radius neighbourhood
         for agent in self.model.grid.iter_cell_list_contents(self.model.grid.get_neighborhood(
                 self.pos, moore=True, include_center=True,
-                radius=params.params['infection_radius'])):
+                radius=self.model.params['infection_radius'])):
             # we can only infect susceptible individuals
             if agent.state == InfectionState.SUS and self.random.uniform(0, 1) < \
-                    params.infection_chance(toroidal_distance(self.pos, agent.pos)):
+                    params.infection_chance(self.model.params, toroidal_distance(self.pos, agent.pos,
+                                                                                 self.model.params['grid_width'],
+                                                                                 self.model.params['grid_height'])):
                 agent.infect()
 
     def move(self):
         """
         Moves agent randomly in Von Neumann neighbourhood
         """
-        distance_to_move = params.movement_distance()
+        distance_to_move = params.movement_distance(self.model.params)
         angle = self.random.uniform(0, 2 * pi)
         cell = (self.pos[0] + round(distance_to_move * cos(angle)),
                 self.pos[1] + round(distance_to_move * sin(angle)))
@@ -133,7 +136,7 @@ class PersonAgent(Agent):
         if self.state == InfectionState.INF:    # every infected agent...
             self.spread()                       # spreads the infections
             self.infection_period()           # infection duration ending
-        elif params.params['has_recovery_immunity'] and self.state == InfectionState.REC:
+        elif self.model.params['has_recovery_immunity'] and self.state == InfectionState.REC:
             self.recovery_timer()               # recovered agents may get susceptible again
         elif self.state == InfectionState.SUS:
             self.try_vaccination()              # susceptible agents may get vaccinated
@@ -158,7 +161,7 @@ class PersonAgent(Agent):
         if self.give_birth:
             # initial state may be vaccinated, if it is started and with a given probability
             initial_state = InfectionState.VAC if self.model.vaccination_started and \
-                self.random.uniform(0, 1) < params.params['general_vaccination_rate'] \
+                self.random.uniform(0, 1) < self.model.params['general_vaccination_rate'] \
                 else InfectionState.SUS
             # create and add the agent
             self.model.add_agent(self.model.create_agent(initial_state), self.pos)

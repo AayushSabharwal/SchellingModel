@@ -1,27 +1,19 @@
 import sys
 import asyncio
-import math
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
-from multiprocessing import Process, freeze_support
-import numpy as np
+from multiprocessing import Process, Manager, freeze_support
 try:
     from static_visualization import static_run
-except ImportError:
-    from .static_visualization import static_run
-try:
     from dynamic_visualization import dynamic_run
-except ImportError:
-    from .dynamic_visualization import dynamic_run
-try:
-    import simulation_parameters as params
-except ImportError:
-    from . import simulation_parameters as params
-try:
     from documentation import documentation as docs
+    from simulation_parameters import DEFAULT_PARAMS, sanity_check
 except ImportError:
-    from .documentation import documentation as docs
+    from InfectionSimulation.static_run import static_run
+    from InfectionSimulation.dynamic_run import dynamic_run
+    from InfectionSimulation.documentation import documentation as docs
+    from InfectionSimulation.simulation_parameters import DEFAULT_PARAMS, sanity_check
 
 if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -34,6 +26,7 @@ class InfectionApp(tk.Frame):
         self.entries = {}
         self.active_process = None
         self.available_row = 0
+        self.params = Manager().dict(DEFAULT_PARAMS)
         self.create_ui()
 
     def create_ui(self):
@@ -136,25 +129,22 @@ class InfectionApp(tk.Frame):
     def update_entries(self):
         for name, entry in self.entries.items():
             entry.delete(0, tk.END)
-            entry.insert(0, str(params.params[name]))
-        self.show_grid.set(int(params.params['show_grid']))
-        self.has_recovery_immunity.set(int(params.params['has_recovery_immunity']))
+            entry.insert(0, str(self.params[name]))
+        self.show_grid.set(int(self.params['show_grid']))
+        self.has_recovery_immunity.set(int(self.params['has_recovery_immunity']))
         self.infection_chance_function.delete(0., tk.END)
-        self.infection_chance_function.insert(0., str(params.params['infection_chance_function']))
+        self.infection_chance_function.insert(0., str(self.params['infection_chance_function']))
 
     def update_params(self):
-        for name in params.params:
+        for name in self.params:
             if name in self.entries:
                 try:
-                    params.params[name] = type(params.params[name])(self.entries[name].get())
+                    self.params[name] = type(self.params[name])(self.entries[name].get())
                 except ValueError:
                     continue
-        params.params["show_grid"] = bool(self.show_grid.get())
-        params.params["has_recovery_immunity"] = bool(self.has_recovery_immunity.get())
-        params.params['infection_chance_function'] = eval(
-            'lambda dist: ' + self.infection_chance_function.get(0., tk.END))
-        print(params.params['infection_chance_function'])
-        params.infection_chance(1)
+        self.params["show_grid"] = bool(self.show_grid.get())
+        self.params["has_recovery_immunity"] = bool(self.has_recovery_immunity.get())
+        self.params['infection_chance_function'] = 'lambda dist: ' + self.infection_chance_function.get(0., tk.END)
 
     def stop_current_simulation(self):
         if self.active_process is not None:
@@ -162,10 +152,10 @@ class InfectionApp(tk.Frame):
 
     def run_button(self, command):
         self.update_params()
-        params.sanity_check()
+        sanity_check(self.params)
         self.stop_current_simulation()
 
-        self.active_process = Process(target=command)
+        self.active_process = Process(target=command, args=(self.params, ))
         self.active_process.start()
 
     def configure_grid(self):

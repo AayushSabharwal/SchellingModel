@@ -5,16 +5,10 @@ from mesa.time import SimultaneousActivation
 from mesa.datacollection import DataCollector
 try:
     from agent import PersonAgent
-except ImportError:
-    from .agent import PersonAgent
-try:
     from utility import InfectionState
 except ImportError:
-    from .utility import InfectionState
-try:
-    from simulation_parameters import Configuration
-except ImportError:
-    from .simulation_parameters import Configuration
+    from InfectionSimulation.agent import PersonAgent
+    from InfectionSimulation.utility import InfectionState
 
 
 # noinspection PyMissingConstructor
@@ -23,18 +17,21 @@ class InfectionModel(Model):
     Mesa model class that simulates infection spread
     """
 
-    def __init__(self, num_agents: int, grid_size: GridXY, initial_infected_chance: float):
+    def __init__(self, params: dict):
         """
         Parameters
         ----------
         num_agents : int
             Number of agents initially created in simulation
-        grid_size : GridXY
+        grid_size : Tuple[int, int]
             Size of simulation grid
         initial_infected_chance : float
             Initial fraction of people who are infected
+        params: dict
+            Simulation parameters
         """
         self.current_id = 0     # inherited variable, for id generation
+        self.params = params    # parameters
         self.statistics = {     # statistics for data collector
             "infected": 0,
             "recovered": 0,
@@ -46,7 +43,7 @@ class InfectionModel(Model):
             "total_recoveries": 0,
         }
 
-        self.grid = MultiGrid(grid_size[0], grid_size[1], True)  # grid that the agent move on
+        self.grid = MultiGrid(self.params['grid_width'], self.params['grid_height'], True)  # grid that agents move on
         self.schedule = SimultaneousActivation(self)    # scheduler for iterations of the simulation
         self.datacollector = DataCollector(model_reporters={    # to collect data for the graph
             "infected": lambda m: m.statistics["infected"],
@@ -65,10 +62,10 @@ class InfectionModel(Model):
         self.vaccination_started = False    # has vaccination started?
 
         # creating agents
-        for _ in range(num_agents):
+        for _ in range(self.params['num_agents']):
             # initial state of this agent
             initial_state = InfectionState.INF if \
-                self.random.uniform(0, 1) < initial_infected_chance else InfectionState.SUS
+                self.random.uniform(0, 1) < self.params['initial_infected_chance'] else InfectionState.SUS
 
             # by default, this won't add to total_infections which leads to incorrect results
             if initial_state == InfectionState.INF:
@@ -97,14 +94,14 @@ class InfectionModel(Model):
         self.schedule.step()    # run step for all agents
 
         # collect data at a particular frequency
-        if self.step_count % params.params['data_collection_frequency'] == 0:
+        if self.step_count % self.params['data_collection_frequency'] == 0:
             self.calculate_statistics()  # calculate statistics for data collector
             self.datacollector.collect(self)    # collect data
 
         self.step_count += 1
         # if vaccination is enabled and enough time has passed
-        if not self.vaccination_started and params.params['vaccination_start'] != -1 and \
-                self.step_count > params.params['vaccination_start']:
+        if not self.vaccination_started and self.params['vaccination_start'] != -1 and \
+                self.step_count > self.params['vaccination_start']:
             self.vaccination_started = True  # start vaccination
 
         for x in self.dead_agents:  # remove dead agents
@@ -143,7 +140,7 @@ class InfectionModel(Model):
         if self.step_count % 24 != 0:
             return
         for agent in self.schedule.agent_buffer():
-            if self.random.uniform(0, 1) < params.params['external_infection_chance']:
+            if self.random.uniform(0, 1) < self.params['external_infection_chance']:
                 agent.state = InfectionState.INF
                 self.statistics["total_infections"] += 1
 
@@ -163,7 +160,7 @@ class InfectionModel(Model):
         """
         return PersonAgent(self.next_id(), self, initial_state)
 
-    def add_agent(self, agent: Agent, pos: GridXY):
+    def add_agent(self, agent: Agent, pos: Tuple[int, int]):
         """
         Adds an agent to the simulation
 
@@ -172,7 +169,7 @@ class InfectionModel(Model):
         agent : agent
             The agent to be added
 
-        pos : GridXY
+        pos : Tuple[int, int]
             The position where this agent should be on the grid
         """
         # add to scheduler

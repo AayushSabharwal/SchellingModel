@@ -1,10 +1,11 @@
 from scipy.stats import erlang
 import numpy as np
 
-params = {
-    'infection_radius': 2,    # how far away from an individual infection can spread
-    'infection_chance_function': 'np.random.normal([0.13, 0.06, 0.03][min(round(dist), 2)], 0.1 * [0.13, 0.06, 0.03][min(round(dist), 2)])',
-    'external_infection_chance': 0.01,    # probability that a random susceptible agent will become
+DEFAULT_PARAMS = {
+    'infection_radius': 2,  # how far away from an individual infection can spread
+    'infection_chance_function': 'np.random.normal([0.13, 0.06, 0.03][min(round(dist), 2)], 0.1 * [0.13, 0.06, 0.03]\
+    [min(round(dist), 2)])',
+    'external_infection_chance': 0.01,  # probability that a random susceptible agent will become
     # infected. This models infection coming from outside
     # recovery probability is modeled as an erlang distribution
     'infection_duration_shape': 33.,
@@ -24,28 +25,30 @@ params = {
 
     # distance moved is modeled as a normal distribution
     'mean_distance_per_hour': 4.,  # average distance moved by an agent in an hour
-    'sd_distance_per_hour': 1.,    # standard deviation in distance moved per hour
+    'sd_distance_per_hour': 1.,  # standard deviation in distance moved per hour
 
     'population_birth_rate': 0.0164,  # number of births per year as fraction of currently alive people
     'population_death_rate': 0.0036,  # number of deaths per year as fraction of currently alive people
 
-    'grid_width': 50,    # size of the GridXY
+    'grid_width': 50,  # size of the GridXY
     'grid_height': 50,
-    'num_agents': 100,       # number of agents
-    'initial_infected_chance': 0.02,   # initial fraction of people infected
+    'num_agents': 100,  # number of agents
+    'initial_infected_chance': 0.02,  # initial fraction of people infected
 
     'show_grid': True,  # whether to show the grid during dynamic visualization
-    'data_collection_frequency': 1,   # integer, at what interval to collect data
+    'data_collection_frequency': 1,  # integer, at what interval to collect data
     'max_iterations': 10000,
 }
 
 
-def infection_chance(dist: float):
+def infection_chance(params: dict, dist: float):
     """
     Calculates infection chance for being at dist metres from an infected individual
 
     Parameters
     ----------
+    params : dict
+        Simulation parameters
     dist : float
         Distance between individuals
 
@@ -54,13 +57,17 @@ def infection_chance(dist: float):
     float
         Probability that infection will occur
     """
+    return eval(params['infection_chance_function'])(dist)
 
-    return params['infection_chance_function'](dist)
 
-
-def movement_distance():
+def movement_distance(params: dict):
     """
     Calculates distance to move for an agent in an iterations
+
+    Parameters
+    ----------
+    params : dict
+        Simulation parameters
 
     Returns
     -------
@@ -70,12 +77,14 @@ def movement_distance():
     return np.random.normal(params['mean_distance_per_hour'], params['sd_distance_per_hour'])
 
 
-def infection_end_chance(i: int):
+def infection_end_chance(params: dict, i: int):
     """
     Calculates probability that an individual's infection will end
 
     Parameters
     ----------
+    params : dict
+        Simulation parameters
     i : int
         The number of iterations since infection
 
@@ -87,13 +96,15 @@ def infection_end_chance(i: int):
     return erlang.cdf(i, params['infection_duration_shape'], scale=params['infection_duration_scale'])
 
 
-def recovered_end_chance(i: int):
+def recovered_end_chance(params: dict, i: int):
     """
     Calculates probability that an individual will lose recovery immunity and become susceptible
     again
 
     Parameters
     ----------
+    params : dict
+        Simulation parameters
     i : int
         The number of iterations since recovery
 
@@ -105,8 +116,15 @@ def recovered_end_chance(i: int):
     return erlang.cdf(i, params['recovered_duration_shape'], scale=params['recovered_duration_scale'])
 
 
-# value sanity checks
-def sanity_check():
+def sanity_check(params: dict):
+    """
+    Perform type and value checking to ensure parameters are valid
+
+    Parameters
+    ----------
+    params: dict
+        Simulation parameters
+    """
     # type checking
     assert isinstance(params['infection_radius'], int)
     assert isinstance(params['external_infection_chance'], float)
