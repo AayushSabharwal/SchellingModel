@@ -1,13 +1,23 @@
+from typing import Tuple
 from mesa import Agent, Model
 from mesa.space import MultiGrid
 from mesa.time import SimultaneousActivation
 from mesa.datacollection import DataCollector
-from type_hints import GridXY
-from agent import PersonAgent
-from utility import InfectionState
-import simulation_parameters as params
+try:
+    from agent import PersonAgent
+except ImportError:
+    from .agent import PersonAgent
+try:
+    from utility import InfectionState
+except ImportError:
+    from .utility import InfectionState
+try:
+    from simulation_parameters import Configuration
+except ImportError:
+    from .simulation_parameters import Configuration
 
 
+# noinspection PyMissingConstructor
 class InfectionModel(Model):
     """
     Mesa model class that simulates infection spread

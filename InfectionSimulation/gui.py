@@ -6,10 +6,22 @@ from tkinter import messagebox
 from tkinter import ttk
 from multiprocessing import Process, freeze_support
 import numpy as np
-from static_visualization import static_run
-from dynamic_visualization import dynamic_run
-import simulation_parameters as params
-from documentation import documentation as docs
+try:
+    from static_visualization import static_run
+except ImportError:
+    from .static_visualization import static_run
+try:
+    from dynamic_visualization import dynamic_run
+except ImportError:
+    from .dynamic_visualization import dynamic_run
+try:
+    import simulation_parameters as params
+except ImportError:
+    from . import simulation_parameters as params
+try:
+    from documentation import documentation as docs
+except ImportError:
+    from .documentation import documentation as docs
 
 if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -77,6 +89,7 @@ class InfectionApp(tk.Frame):
         self.create_horizontal_pair("Data Collection Frequency", 4)
         self.create_horizontal_pair("Max Iterations", 4)
         self.update_entries()
+        self.update_params()
 
         tk.Label(self.master, text="Click on parameter name for its description")\
             .grid(column=1, row=self.available_row, columnspan=5)
@@ -140,6 +153,8 @@ class InfectionApp(tk.Frame):
         params.params["has_recovery_immunity"] = bool(self.has_recovery_immunity.get())
         params.params['infection_chance_function'] = eval(
             'lambda dist: ' + self.infection_chance_function.get(0., tk.END))
+        print(params.params['infection_chance_function'])
+        params.infection_chance(1)
 
     def stop_current_simulation(self):
         if self.active_process is not None:

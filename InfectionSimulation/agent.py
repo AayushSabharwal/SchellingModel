@@ -1,7 +1,13 @@
 from math import sin, cos, pi
 from mesa import Agent, Model
-import simulation_parameters as params
-from utility import InfectionState, toroidal_distance
+try:
+    import simulation_parameters as params
+except ImportError:
+    from . import simulation_parameters as params
+try:
+    from utility import InfectionState, toroidal_distance
+except ImportError:
+    from .utility import InfectionState, toroidal_distance
 
 
 class PersonAgent(Agent):
