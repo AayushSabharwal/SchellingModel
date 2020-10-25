@@ -2,5 +2,6 @@ get-pip.py
 build/
 __pycache__/
 screenshots/
+releases/
 SchellingModel/Analysis/
 .idea/
