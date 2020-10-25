@@ -78,12 +78,12 @@ class PersonAgent(Agent):
                 self.model.dead_agents.append(self)
             else:
                 self.model.statistics["total_recoveries"] += 1
-                if self.model.params['has_recovery_immunity']:  # if there is no immunity stage
-                    # agents go back to susceptibility
-                    self.target_state = InfectionState.SUS
-                else:   # otherwise, they will go to the recovery state
+                if self.model.params['has_recovery_immunity']:  # if there is immunity stage
                     self.target_state = InfectionState.REC
                     self.recovered_duration = 0
+                else:   # otherwise, they will go to the susceptible state
+                    # agents go back to susceptibility
+                    self.target_state = InfectionState.SUS
 
     def recovery_timer(self):
         """
