@@ -1,4 +1,4 @@
-#Infection Simulation using Agent Based Modeling
+# Infection Simulation using Agent Based Modeling
 
 This project aims to simulate the spread of an infection in a population
  using Agent Based modeling through the [mesa library for Python](https://github.com/projectmesa/mesa/).
